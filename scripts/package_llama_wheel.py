@@ -37,7 +37,8 @@ def main() -> None:
     platform_tag = "manylinux" if args.system == "linux" else "win_amd64"
     candidates = sorted({
         urllib.parse.urljoin(index, href) for href in links.hrefs
-        if (f"-{args.version}-" in href and platform_tag in href and "x86_64" in href
+        if (f"-{args.version}-" in href and platform_tag in href
+            and (args.system == "windows" or "x86_64" in href)
             and "musllinux" not in href and href.endswith(".whl"))
     })
     if len(candidates) != 1:
