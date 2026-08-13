@@ -26,6 +26,7 @@ userdata/
 *.mp3
 *.png
 !static/*.png
+!docs/images/*.png
 
 # ログ
 *.log

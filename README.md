@@ -4,6 +4,10 @@
 
 音楽生成Webアプリケーション
 
+## GUI Example
+
+![Momo Song GUI example](docs/images/gui-example.png)
+
 ## 機能
 
 - AI による歌詞生成
