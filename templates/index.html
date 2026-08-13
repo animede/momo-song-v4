@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>音楽生成</title>
+    <!-- 外部CSSを読み込む -->
+    <link rel="stylesheet" href="/static/style.css">
+  </head>
+
+  <body>
+
+    <div class="content-wrapper">
+      <header class="app-header">
+        <div class="app-title">Momo Song</div>
+        <div class="app-subtitle">AI Music Generator</div>
+        <div class="header-image-selector">
+          <label for="startup_image_select">背景</label>
+          <div class="background-select-stack">
+            <select id="startup_image_select" name="startup_image">
+              <option value="auto" data-mode="auto">自動選択（曲に合わせる）</option>
+              <option value="random" data-mode="random">ランダム</option>
+              <option value="/static/momo_song_startup.png" selected data-auto="true" data-caption="夜明けのAI音楽スタジオ" data-keywords="音楽 ai 未来 希望 創作 electronic pop technology studio">AI音楽スタジオ</option>
+              <option value="/static/momo_song_startup_dj_dog.png" data-caption="レコードを奏でる、ももちゃん">ももちゃん</option>
+              <option value="/static/momo_song_bg_night_city.png" data-auto="true" data-caption="静かな湾を望む夜の都会" data-keywords="夜 都会 街 ネオン 孤独 切ない city urban night jazz citypop melancholic">夜の都会・遠景</option>
+              <option value="/static/momo_song_bg_milky_way.png" data-auto="true" data-caption="天の川が広がる静かな星空" data-keywords="星 星空 天の川 宇宙 夜 夢 神秘 galaxy space dream ambient ballad">天の川の星空</option>
+              <option value="/static/momo_song_bg_healing_meadow.png" data-auto="true" data-caption="朝霧に包まれた草原と緑の山" data-keywords="自然 草原 山 川 朝 癒し 平和 旅 nature healing calm folk acoustic new age">癒やしの草原と山</option>
+              <option value="/static/momo_song_bg_future_city.png" data-auto="true" data-caption="青い光に浮かぶ穏やかな近未来都市" data-keywords="未来 都市 ai テクノロジー 希望 電子 cyber future electronic techno synthwave">近未来都市</option>
+              <option value="/static/momo_song_bg_woman_sidewalk.png" data-auto="true" data-caption="夕暮れの歩道を一人歩く女性" data-keywords="女性 一人 歩く 帰り道 夕暮れ 孤独 思い出 別れ woman walk evening lonely ballad">歩道を歩く女性・遠景</option>
+              <option value="/static/momo_song_bg_hometown.png" data-auto="true" data-caption="夕陽に染まる懐かしい故郷の街" data-keywords="故郷 帰郷 ふるさと 家族 思い出 夕焼け 懐かしい hometown nostalgia family folk">故郷の街</option>
+              <option value="/static/momo_song_bg_living_room.png" data-auto="true" data-caption="灯りが優しい日常のリビング" data-keywords="日常 家 部屋 リビング 家族 暮らし 安心 夜 home living room daily warm cozy">日常のリビング</option>
+              <option value="/static/momo_song_bg_day_crosswalk_woman.png" data-auto="true" data-caption="木漏れ日の横断歩道を歩く女性" data-keywords="女性 昼 街 横断歩道 歩く 日常 出会い 青春 woman daytime city walk pop">昼の横断歩道を歩く女性</option>
+              <option value="/static/momo_song_bg_hydrangea.png" data-auto="true" data-caption="雨上がりの小道に咲く紫陽花" data-keywords="雨 紫陽花 梅雨 花 涙 切ない 癒し hydrangea rain flower piano ballad calm">雨上がりの紫陽花</option>
+              <option value="/static/momo_song_bg_sunflower_farm.png" data-auto="true" data-caption="大地いっぱいに広がるひまわり畑" data-keywords="夏 太陽 ひまわり 農場 大地 希望 元気 平和 sunflower summer bright uplifting country rock">一面のひまわり農場</option>
+            </select>
+          </div>
+          <label for="animation_select">演出</label>
+          <div class="background-select-stack">
+            <select id="animation_select" name="animation_mode">
+              <option value="auto">自動選択（曲に合わせる）</option>
+              <option value="volume-ring" selected>音量リング</option>
+              <option value="waveform">ライブ波形</option>
+              <option value="star-drift">星のきらめき</option>
+              <option value="spectrum-bars">帯域スペクトラム</option>
+              <option value="neon-breathe">ネオンの呼吸</option>
+              <option value="radial-spectrum">放射スペクトラム</option>
+              <option value="bass-orbs">低音オーブ</option>
+              <option value="warm-lamp">灯りのゆらぎ</option>
+              <option value="frequency-ribbons">周波数リボン</option>
+              <option value="sound-particles">音響パーティクル</option>
+              <option value="stereo-waves">ステレオウェーブ</option>
+            </select>
+          </div>
+        </div>
+      </header>
+      <div id="startup-hero" class="startup-hero">
+        <img id="startup-hero-image" src="/static/momo_song_startup.png" alt="夜明けのAI音楽スタジオ">
+      </div>
+      <!-- 動画と画像をラップするコンテナ -->
+      <div id="media-container">
+        <div id="loading-spinner"></div>
+        <div id="status" class="status-text"></div>
+       <!-- ここで生成済み歌詞をバックグランドimgにオーバーラップ -->
+        <div class="overlay-text_a">
+          <pre id="result_title_a" class="lyrics-title lyrics-title-small"></pre>
+          <div class="lyrics-scroll-area">
+            <pre id="lyrics_a"></pre>
+          </div>
+        </div>
+        <!-- 生成後に切り替える画像 -->
+        <div class="overlay-container" style="position: relative;">
+          <img
+            id="image"
+            alt="Generated Image"
+            style="display:none;"
+          />
+          <!-- ここでリングを追加 -->
+          <div id="pulse-ring"></div>
+          <div id="motion-visualizer" aria-hidden="true">
+            <canvas id="audio-visualizer-canvas"></canvas>
+            <div id="ambient-visualizer">
+              <span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span>
+            </div>
+          </div>
+          <!-- ここで歌詞を切り替え画像にオーバーラップ -->
+          <div class="overlay-text">
+            <pre id="result_title" class="lyrics-title"></pre>
+            <div class="lyrics-scroll-area">
+              <pre id="lyrics"></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="result" class="result-layout">
+        <div class="music-description">
+          <h3>音楽の解説</h3>
+          <p id="music_text"></p>
+        </div>
+        <div class="audio-container">
+          <audio id="audio_player" controls autoplay>
+            お使いのブラウザはaudio要素に対応していません。
+          </audio>
+        </div>
+      </div>
+
+      <div id="input-controls">
+      <!-- 新：Flex コンテナでラップ -->
+      <div class="input-group">
+        <textarea
+            id="user_input"
+            name="user_input"
+            rows="2"
+            cols="50"
+            placeholder="生成したい曲のイメージや指示を入力してください。たとえば、ジャンルやムード、楽器の指定などを含めると良いでしょう。指定がなければ、おまかせで生成します。"
+          ></textarea>
+        <div class="button-wrapper" style="margin-top:0px">
+          <!-- ボタンを横並びにまとめる行 -->
+          <div class="button-row">
+            <button id="generate_btn">音楽生成</button>
+            <button id="back_btn" type="button">初期化</button>
+            <button id="auto_generate_btn" type="button" aria-pressed="false">ループ生成</button>
+            <button id="save_btn">保存</button>
+          </div>
+        </div>
+      </div>
+
+      <form id="generate_form" onsubmit="return false;" style="margin-top:10px">
+        <div class="controls-wrapper">
+          <div class="form-section">
+            <!-- アコーディオン本体 -->
+            <div class="accordion">
+              <!-- 開閉用チェックボックス（非表示） -->
+              <input type="checkbox" id="params_toggle" class="accordion-toggle" />
+              <!-- 押せる見出し -->
+              <label for="params_toggle" class="accordion-label">
+              生成パラメータ
+              </label>
+              <!-- 折りたたみ中身 -->
+              <div class="accordion-content">
+                <!-- テキスト入力群 -->
+                <div class="form-item">
+                  <label for="title">タイトル（任意）</label>
+                  <input type="text" id="title" name="title" placeholder="タイトルを入力">
+                </div>
+                <div class="form-item">
+                  <label for="genre">ジャンル（任意）</label>
+                  <input type="text" id="genre" name="genre" placeholder="例：ポップ、ジャズ">
+                </div>
+                <div class="form-item">
+                  <label for="mood">ムード（任意）</label>
+                  <input type="text" id="mood" name="mood" placeholder="例：明るい、落ち着いた">
+                </div>
+                <div class="form-item">
+                  <label for="instruments">楽器（任意）</label>
+                  <input type="text" id="instruments" name="instruments" placeholder="例：ギター、ピアノ">
+                </div>
+                <!-- スライダー群 -->
+                <div class="slider-container">
+                  <div class="slider-item">
+                    <label for="infer_step">推論ステップ</label>
+                    <input type="range" id="infer_step" name="infer_step"
+                      min="20" max="200" step="1" value="100"
+                      oninput="document.getElementById('infer_step_value').textContent = this.value" />
+                    <span id="infer_step_value">100</span>
+                  </div>
+                  <div class="slider-item">
+                    <label for="guidance_scale">guidance_scale</label>
+                    <input type="range" id="guidance_scale" name="guidance_scale"
+                      min="0" max="20" step="0.1" value="3"
+                      oninput="document.getElementById('guidance_scale_value').textContent = this.value" />
+                    <span id="guidance_scale_value">3.0</span>
+                  </div>
+                  <div class="slider-item">
+                    <label for="audio_duration">音楽の長さ（秒）</label>
+                    <input type="range" id="audio_duration" name="audio_duration"
+                      min="-1" max="180" step="1" value="-1"
+                      oninput="updateAudioDurationValue(this.value)" />
+                    <span id="audio_duration_value">自動</span>
+                  </div>
+                  <div class="slider-item music-settings-row">
+                    <strong>音楽設定</strong>
+                    <label>
+                      <input type="checkbox" id="no_vocal" name="no_vocal">
+                      ボーカルなしバージョン
+                    </label>
+                  </div>
+                </div>
+                <div class="form-item display-params" style="margin-top: 10px;">
+                  <strong>表示パラメータ</strong>
+                  <div style="margin-top: 5px;">
+                    <label>画像サイズ:</label>
+                    <label><input type="radio" name="img_aspect" value="16:9" checked>16:9</label>
+                    <label><input type="radio" name="img_aspect" value="4:3">4:3</label>
+                  </div>
+                  <div style="margin-top: 5px;">
+                    <label>向き:</label>
+                    <label><input type="radio" name="img_orientation" value="landscape" checked>横</label>
+                    <label><input type="radio" name="img_orientation" value="portrait">縦</label>
+                  </div>
+                </div>
+                <div class="music-backend-row">
+                  <div class="form-item">
+                    <label for="music_backend">音楽生成バックエンド</label>
+                    <select id="music_backend" name="music_backend">
+                      <option value="remote">Remote ACE-Step 1.5</option>
+                      <option value="local_cpp" selected>Local acestep.cpp（画像生成なし）</option>
+                    </select>
+                  </div>
+                  <div class="form-item">
+                    <label for="ace_model">モデル</label>
+                    <select id="ace_model" name="ace_model">
+                      <option value="acestep-v15-turbo-Q4_K_M.gguf" selected>TURBO-Q4（標準／STRICT時6GB～）</option>
+                      <option value="acestep-v15-turbo-Q8_0.gguf">TURBO-Q8（高品質／12GB～）</option>
+                      <option value="acestep-v15-xl-turbo-Q4_K_M.gguf">XL TURBO（超高品質／16GB～）</option>
+                    </select>
+                  </div>
+                  <div class="form-item">
+                    <label for="ace_memory_mode">ACE-Step VRAMモード</label>
+                    <select id="ace_memory_mode" name="ace_memory_mode">
+                      <option value="keep_loaded" selected>モデル常駐（高速）</option>
+                      <option value="strict">STRICT（省VRAM）</option>
+                    </select>
+                  </div>
+                  <div class="form-item">
+                    <label for="vocal_language">ボーカル言語</label>
+                    <select id="vocal_language" name="vocal_language">
+                      <option value="ja" selected>日本語</option>
+                      <option value="en">英語</option>
+                      <option value="zh">中国語</option>
+                      <option value="ko">韓国語</option>
+                      <option value="unknown">自動判定</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="music-detail-row">
+                  <div class="form-item">
+                    <label for="bpm">BPM（空欄で自動）</label>
+                    <input type="number" id="bpm" min="30" max="300" placeholder="自動">
+                  </div>
+                  <div class="form-item">
+                    <label for="key_scale">キー（空欄で自動）</label>
+                    <select id="key_scale"><option value="">自動</option></select>
+                  </div>
+                  <div class="form-item">
+                    <label for="seed">Seed（空欄でランダム）</label>
+                    <input type="number" id="seed" min="0" step="1" placeholder="ランダム">
+                  </div>
+                  <div class="form-item thinking-item">
+                    <label><input type="checkbox" id="thinking" checked> Thinking（高品質）</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div><!-- /.form-section -->
+        </div>
+        <input type="checkbox" id="auto_generate_chk" hidden>
+      </form>
+      <section id="song-history" class="song-history" aria-label="生成した曲">
+        <div class="song-history-heading">
+          <h3>生成した曲</h3>
+          <button id="download_all_songs" type="button" disabled>一括ダウンロード</button>
+        </div>
+        <div id="song-history-list"></div>
+        <p id="song-history-empty">まだ生成された曲はありません。</p>
+      </section>
+      <footer class="model-credits">
+        Music generation powered by ACE-Step 1.5 · Lyrics powered by Google Gemma 4
+      </footer>
+      </div>
+    </div>
+
+    <script>
+      const spinner     = document.getElementById('loading-spinner');
+      const generateBtn = document.getElementById('generate_btn');
+      const backBtn = document.getElementById('back_btn');
+      const resultDiv = document.getElementById('result');
+      const audioPlayer = document.getElementById('audio_player');
+      const inputControls = document.getElementById('input-controls');
+      const statusEl = document.getElementById('status');
+      const BASE_HUE = 240; // 0=赤, 120=緑, 240=青 など
+      let audioCtx, analyser, source, dataArray, waveformData;
+      let stereoSplitter, leftAnalyser, rightAnalyser, leftWaveformData, rightWaveformData;
+
+      spinner.style.display = 'none';
+      resultDiv.style.display = 'none';
+      audioPlayer.style.display = 'none';
+
+      const startupImageSelect = document.getElementById('startup_image_select');
+      const defaultBackground = '/static/momo_song_startup.png';
+      let activeBackgroundImage = defaultBackground;
+      let activeBackgroundCaption = '夜明けのAI音楽スタジオ';
+
+      function backgroundCandidates() {
+        // data-autoを持つ画像だけが自動・ランダム候補。ももちゃんは意図的に除外する。
+        return Array.from(startupImageSelect.options).filter(option => option.dataset.auto === 'true');
+      }
+
+      function applyBackground(option, updateHero = true) {
+        if (!option || option.dataset.mode) return;
+        activeBackgroundImage = option.value;
+        activeBackgroundCaption = option.dataset.caption || option.textContent;
+        if (updateHero) {
+          const heroImage = document.getElementById('startup-hero-image');
+          heroImage.src = activeBackgroundImage;
+          heroImage.alt = activeBackgroundCaption;
+        }
+        document.getElementById('media-container').style.backgroundImage = `url("${activeBackgroundImage}")`;
+      }
+
+      function secureRandomIndex(length) {
+        if (length <= 1) return 0;
+        const limit = Math.floor(0x100000000 / length) * length;
+        const values = new Uint32Array(1);
+        do crypto.getRandomValues(values); while (values[0] >= limit);
+        return values[0] % length;
+      }
+
+      function randomBackground() {
+        const candidates = backgroundCandidates();
+        return candidates[secureRandomIndex(candidates.length)];
+      }
+
+      function automaticBackground(songText) {
+        const normalized = String(songText || '').toLocaleLowerCase('ja');
+        let bestScore = 0;
+        let best = [];
+        backgroundCandidates().forEach(option => {
+          const keywords = (option.dataset.keywords || '').toLocaleLowerCase('ja').split(/\s+/).filter(Boolean);
+          const score = keywords.reduce((total, keyword) => total + (normalized.includes(keyword) ? Math.max(1, keyword.length) : 0), 0);
+          if (score > bestScore) {
+            bestScore = score;
+            best = [option];
+          } else if (score === bestScore) {
+            best.push(option);
+          }
+        });
+        // 一致語がない場合と同点の場合は偏りを避けてランダムに決める。
+        return best.length ? best[secureRandomIndex(best.length)] : randomBackground();
+      }
+
+      function resolveBackgroundForSong(songData, description, userPrompt, mode = startupImageSelect.value) {
+        if (mode === 'random') {
+          applyBackground(randomBackground());
+        } else if (mode === 'auto') {
+          applyBackground(automaticBackground(`${userPrompt}\n${description}\n${JSON.stringify(songData)}`));
+        } else {
+          applyBackground(startupImageSelect.selectedOptions[0]);
+        }
+        return activeBackgroundImage;
+      }
+
+      startupImageSelect.addEventListener('change', () => {
+        const selected = startupImageSelect.selectedOptions[0];
+        if (selected.dataset.mode === 'random') {
+          applyBackground(randomBackground());
+        } else if (!selected.dataset.mode) {
+          applyBackground(selected);
+        }
+      });
+
+      const animationSelect = document.getElementById('animation_select');
+      const animationDefinitions = [
+        { id: 'volume-ring', label: '音量リング', keywords: '音楽 リズム ビート ダンス pop rock dance funk upbeat' },
+        { id: 'waveform', label: 'ライブ波形', keywords: '静か 深い 壮大 夜 バラード calm ambient cinematic ballad' },
+        { id: 'star-drift', label: '星のきらめき', keywords: '星 星空 宇宙 夢 幻想 galaxy space dream fantasy' },
+        { id: 'spectrum-bars', label: '帯域スペクトラム', keywords: '自然 草原 山 川 癒し 風 folk acoustic healing nature' },
+        { id: 'neon-breathe', label: 'ネオンの呼吸', keywords: '未来 都市 ネオン 電子 techno electronic synthwave cyber' },
+        { id: 'radial-spectrum', label: '放射スペクトラム', keywords: '孤独 歩く 別れ 旅 女性 cinematic emotional lonely journey' },
+        { id: 'bass-orbs', label: '低音オーブ', keywords: '故郷 思い出 懐かしい 家族 夕暮れ nostalgia hometown memory' },
+        { id: 'warm-lamp', label: '灯りのゆらぎ', keywords: '日常 家 部屋 安心 温かい 夜 home cozy warm family' },
+        { id: 'frequency-ribbons', label: '周波数リボン', keywords: '昼 青春 出会い 街 明るい daytime youth bright city' },
+        { id: 'sound-particles', label: '音響パーティクル', keywords: '雨 紫陽花 梅雨 涙 切ない rain hydrangea melancholic piano' },
+        { id: 'stereo-waves', label: 'ステレオウェーブ', keywords: 'レコード dj グルーヴ 犬 hiphop disco house groove vinyl' },
+      ];
+      const animationClasses = animationDefinitions.map(item => `animation-${item.id}`);
+      let currentAutoAnimation = 'volume-ring';
+
+      function automaticAnimation(songText) {
+        const normalized = String(songText || '').toLocaleLowerCase('ja');
+        let highest = 0;
+        let best = [];
+        animationDefinitions.forEach(definition => {
+          const score = definition.keywords.split(/\s+/).reduce(
+            (total, keyword) => total + (normalized.includes(keyword) ? Math.max(1, keyword.length) : 0),
+            0
+          );
+          if (score > highest) {
+            highest = score;
+            best = [definition];
+          } else if (score === highest) {
+            best.push(definition);
+          }
+        });
+        return (best.length ? best[secureRandomIndex(best.length)] : animationDefinitions[0]).id;
+      }
+
+      function applyAnimation(animationId) {
+        const media = document.getElementById('media-container');
+        media.classList.remove(...animationClasses);
+        media.classList.add(`animation-${animationId}`);
+        const visualizerCanvas = document.getElementById('audio-visualizer-canvas');
+        visualizerCanvas.getContext('2d').clearRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
+      }
+
+      function applySelectedAnimation(autoAnimation = currentAutoAnimation) {
+        currentAutoAnimation = autoAnimation;
+        if (animationSelect.value === 'auto') {
+          applyAnimation(currentAutoAnimation);
+        } else {
+          applyAnimation(animationSelect.value);
+        }
+      }
+
+      animationSelect.addEventListener('change', () => {
+        applySelectedAnimation();
+      });
+      applySelectedAnimation();
+
+      function applyBackendDisplay(backend) {
+        const isLocal = backend === 'local_cpp';
+        const steps = document.getElementById('infer_step');
+        const guidance = document.getElementById('guidance_scale');
+        document.querySelector('.display-params').style.display = isLocal ? 'none' : '';
+        if (isLocal) {
+          steps.value = 8;
+          guidance.value = 1;
+        } else {
+          steps.value = 100;
+          guidance.value = 3;
+        }
+        document.getElementById('infer_step_value').textContent = steps.value;
+        document.getElementById('guidance_scale_value').textContent = Number(guidance.value).toFixed(1);
+      }
+
+      document.getElementById('music_backend').addEventListener('change', (event) => {
+        applyBackendDisplay(event.target.value);
+      });
+      applyBackendDisplay(document.getElementById('music_backend').value);
+
+      function setMediaAspect(width, height) {
+        const mediaContainer = document.getElementById('media-container');
+        mediaContainer.style.aspectRatio = `${width} / ${height}`;
+      }
+
+      function showCreationView(width, height) {
+        setMediaAspect(width, height);
+        // 同じ起動画像を仮背景として引き継ぎ、生成画像の完成まで維持する。
+        document.getElementById('startup-hero').style.display = 'none';
+        document.getElementById('media-container').classList.remove('is-loading');
+        document.getElementById('media-container').classList.add('is-visible');
+        inputControls.style.display = 'none';
+        resultDiv.style.display = 'grid';
+      }
+
+      function restoreInputView() {
+        inputControls.style.display = 'block';
+      }
+
+      const keyScaleSelect = document.getElementById('key_scale');
+      ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].forEach(note => {
+        ['major', 'minor'].forEach(mode => {
+          const option = document.createElement('option');
+          option.value = `${note} ${mode}`;
+          option.textContent = `${note} ${mode}`;
+          keyScaleSelect.appendChild(option);
+        });
+      });
+
+      // 音楽の長さ表示を更新する関数
+      function updateAudioDurationValue(value) {
+        const display = document.getElementById('audio_duration_value');
+        if (value == -1) {
+          display.textContent = '自動';
+        } else {
+          display.textContent = value + '秒';
+        }
+      }
+
+      // 再生・画像アップデート用のキュー
+      // ページ接続ごとに独立した履歴セッションを発行する。
+      const connectionSessionId = crypto.randomUUID();
+      const playQueue = [];
+      const songHistory = [];
+      let isPlaying = false;
+      let isGenerating = false; // 生成中フラグを追加
+      let activeGenerationController = null;
+      let lastGeneratedTitle = '';
+
+      function formatDuration(seconds) {
+        if (!Number.isFinite(seconds) || seconds < 0) return '--:--';
+        const minutes = Math.floor(seconds / 60);
+        const remainder = Math.floor(seconds % 60);
+        return `${minutes}:${String(remainder).padStart(2, '0')}`;
+      }
+
+      function downloadDataUrl(dataUrl, filename) {
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      }
+
+      const downloadAllSongsButton = document.getElementById('download_all_songs');
+      downloadAllSongsButton.addEventListener('click', async () => {
+        if (!songHistory.length) return;
+        downloadAllSongsButton.disabled = true;
+        downloadAllSongsButton.textContent = 'ZIP作成中…';
+        try {
+          const response = await fetch('/download_history_zip', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              songs: songHistory.map(song => ({
+                title: song.titleText || '無題',
+                lyrics: song.plainText || '',
+                audio_base64: song.audio_base64,
+              })),
+            }),
+          });
+          if (!response.ok) throw new Error(`ZIP作成失敗: ${response.status}`);
+          const zipUrl = URL.createObjectURL(await response.blob());
+          downloadDataUrl(zipUrl, '生成した曲.zip');
+          setTimeout(() => URL.revokeObjectURL(zipUrl), 0);
+        } catch (error) {
+          console.error(error);
+          alert('一括ダウンロードを作成できませんでした。');
+        } finally {
+          downloadAllSongsButton.disabled = !songHistory.length;
+          downloadAllSongsButton.textContent = '一括ダウンロード';
+        }
+      });
+
+      function addSongHistory(item, duration) {
+        if (item.historyAdded) return;
+        item.historyAdded = true;
+        const entry = {
+          ...item,
+          id: crypto.randomUUID(),
+          sessionId: connectionSessionId,
+          duration,
+        };
+        if (entry.sessionId !== connectionSessionId) return;
+        songHistory.unshift(entry);
+        downloadAllSongsButton.disabled = false;
+
+        const row = document.createElement('div');
+        row.className = 'song-history-row';
+        row.dataset.songId = entry.id;
+
+        const info = document.createElement('div');
+        info.className = 'song-history-info';
+        const title = document.createElement('span');
+        title.className = 'song-history-title';
+        title.textContent = entry.titleText || '無題';
+        const meta = document.createElement('span');
+        meta.className = 'song-history-meta';
+        meta.textContent = formatDuration(duration);
+        info.append(title, meta);
+
+        const actions = document.createElement('div');
+        actions.className = 'song-history-actions';
+        const play = document.createElement('button');
+        play.type = 'button';
+        play.className = 'history-icon-button history-play-button';
+        play.title = '再生';
+        play.setAttribute('aria-label', `${title.textContent}を再生`);
+        play.textContent = '▶';
+        play.addEventListener('click', () => {
+          // 履歴再生は手動操作として、現在曲と自動生成キューを即座に置き換える。
+          disableAutoGenerate();
+          autoGenerateChk.checked = false;
+          audioPlayer.pause();
+          isPlaying = false;
+          playQueue.length = 0;
+          playQueue.push(entry);
+          processPlayQueue();
+        });
+        const download = document.createElement('button');
+        download.type = 'button';
+        download.className = 'history-icon-button';
+        download.title = 'ダウンロード';
+        download.setAttribute('aria-label', `${title.textContent}をダウンロード`);
+        download.textContent = '⬇';
+        download.addEventListener('click', () => {
+          downloadDataUrl(entry.audio_base64, `${entry.titleText || 'music'}.mp3`);
+          const lyricsUrl = URL.createObjectURL(new Blob([entry.plainText], { type: 'text/plain;charset=utf-8' }));
+          downloadDataUrl(lyricsUrl, `${entry.titleText || 'music'}.txt`);
+          setTimeout(() => URL.revokeObjectURL(lyricsUrl), 0);
+        });
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'history-icon-button history-delete-button';
+        remove.title = '削除';
+        remove.setAttribute('aria-label', `${title.textContent}を履歴から削除`);
+        remove.textContent = '✕';
+        remove.addEventListener('click', () => {
+          const index = songHistory.findIndex(song =>
+            song.id === entry.id && song.sessionId === connectionSessionId
+          );
+          if (index >= 0) songHistory.splice(index, 1);
+          row.remove();
+          document.getElementById('song-history-empty').style.display = songHistory.length ? 'none' : 'block';
+          downloadAllSongsButton.disabled = !songHistory.length;
+        });
+        actions.append(play, download, remove);
+        row.append(info, actions);
+        document.getElementById('song-history-list').prepend(row);
+        document.getElementById('song-history-empty').style.display = 'none';
+      }
+
+// 画像生成ボタン押下時などに呼び出す
+function getImageSizeParams() {
+  const aspect = document.querySelector('input[name="img_aspect"]:checked').value;
+  const orientation = document.querySelector('input[name="img_orientation"]:checked').value;
+
+  // デフォルト値
+  let width = 1296, height = 728;
+
+  if (aspect === "16:9") {
+    if (orientation === "landscape") {
+      width = 1296; height = 728;
+    } else {
+      width = 728; height = 1296;
+    }
+  } else if (aspect === "4:3") {
+    if (orientation === "landscape") {
+      width = 1024; height = 768;
+    } else {
+      width = 768; height = 1024;
+    }
+  }
+  return { width, height };
+}
+
+
+      // キュー監視・処理関数
+      async function processPlayQueue() {
+        if (isPlaying || isGenerating) return; // 再生中・生成中は表示を書き換えない
+        //if (playQueue.length === 0) return; // キューが空なら何もしない
+        if (playQueue.length === 0) {
+          setTimeout(processPlayQueue, 500);
+          return;
+        }
+        // キューからデータを取り出す
+        const item = playQueue.shift();
+        isPlaying = true;
+        inputControls.style.display = 'none';
+        document.getElementById('startup-hero').style.display = 'none';
+        document.getElementById('media-container').classList.add('is-visible');
+        // ここで画像・歌詞・音声を更新
+        document.getElementById('result_title').textContent = item.titleText;
+        document.getElementById('lyrics').textContent = item.plainText;
+        document.getElementById('music_text').textContent = item.musicMessage || '';
+        applySelectedAnimation(item.autoAnimation || 'volume-ring');
+        if (item.backgroundCaption) {
+          activeBackgroundCaption = item.backgroundCaption;
+        }
+        activeBackgroundImage = item.image_base64 || defaultBackground;
+        document.getElementById('media-container').style.backgroundImage = `url("${activeBackgroundImage}")`;
+        document.getElementById('image').src = item.image_base64;
+        document.getElementById('image').style.display = 'block';
+        document.querySelector('.overlay-text_a').style.display = 'none';
+        const playbackLyrics = document.querySelector('.overlay-text');
+        playbackLyrics.style.display = 'flex';
+        playbackLyrics.querySelector('.lyrics-scroll-area').scrollTop = 0;
+        audioPlayer.src = item.audio_base64;
+        audioPlayer.addEventListener('loadedmetadata', () => {
+          addSongHistory(item, audioPlayer.duration);
+        }, { once: true });
+        audioPlayer.style.display = 'block';
+        resultDiv.style.display = 'grid';
+        updateStatus('作曲終了…');
+        setTimeout(processPlayQueue, 500);
+        // ★ここを追加　再生の確実性が上がります
+        try {
+          await audioPlayer.play();
+          document.getElementById('media-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } catch (e) {
+          console.warn('Audio play failed:', e);
+        }
+
+      }
+
+      // audioPlayerの再生終了時に次のキューを処理
+      audioPlayer.addEventListener('ended', () => {
+        isPlaying = false;
+        document.getElementById('media-container').classList.remove('is-audio-playing');
+        restoreInputView();
+        if (!isGenerating) processPlayQueue();
+      });
+      audioPlayer.addEventListener('pause', () => {
+        document.getElementById('media-container').classList.remove('is-audio-playing');
+      });
+
+      // 長い歌詞だけを曲の進行に合わせてスクロールする。
+      audioPlayer.addEventListener('timeupdate', () => {
+        const lyricsOverlay = document.querySelector('.overlay-text .lyrics-scroll-area');
+        const maxScroll = lyricsOverlay.scrollHeight - lyricsOverlay.clientHeight;
+        if (maxScroll <= 1 || !Number.isFinite(audioPlayer.duration) || audioPlayer.duration <= 0) {
+          lyricsOverlay.scrollTop = 0;
+          return;
+        }
+
+        // 曲の冒頭と末尾には、先頭と最後の歌詞を読む時間を残す。
+        const startAt = audioPlayer.duration * 0.05;
+        const finishAt = audioPlayer.duration * 0.90;
+        const progress = Math.max(
+          0,
+          Math.min(1, (audioPlayer.currentTime - startAt) / (finishAt - startAt))
+        );
+        lyricsOverlay.scrollTop = maxScroll * progress;
+      });
+
+      // 初回起動時に監視開始
+      processPlayQueue();
+
+      // 2. 自動生成用のタイマー・状態管理
+      let autoGenerateEnabled = false;
+      let lastUserAction = Date.now(); // ←ここを修正
+      const AUTO_GENERATE_IDLE = 60000;     // 60秒間操作がなければ発動
+
+      // エラー回復機能用の変数
+      let consecutiveErrors = 0;           // 連続エラー回数
+      const MAX_CONSECUTIVE_ERRORS = 3;    // 最大連続エラー回数
+      const ERROR_RETRY_DELAY = 10000;     // エラー後のリトライ間隔（10秒）
+      let isInErrorRecovery = false;       // エラー回復モード中フラグ
+
+      const autoGenerateChk = document.getElementById('auto_generate_chk');
+      const autoGenerateBtn = document.getElementById('auto_generate_btn');
+
+      function syncAutoGenerateButton() {
+        const enabled = autoGenerateChk.checked;
+        autoGenerateBtn.classList.toggle('is-active', enabled);
+        autoGenerateBtn.setAttribute('aria-pressed', String(enabled));
+        autoGenerateBtn.textContent = enabled ? 'ループ生成 ON' : 'ループ生成';
+      }
+
+      autoGenerateBtn.addEventListener('click', (event) => {
+        event.stopPropagation();
+        autoGenerateChk.checked = !autoGenerateChk.checked;
+        autoGenerateChk.dispatchEvent(new Event('change'));
+      });
+
+      let isAutoGenerating = false;
+
+      // 3. generateBtnクリック関数をラップ（エラー回復機能付き）
+      async function triggerGenerate() {
+        if (isGenerating) return; // 生成中はスキップ
+
+        // 連続エラーが最大値を超えた場合は自動生成を停止
+        if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
+          console.warn(`連続エラーが${MAX_CONSECUTIVE_ERRORS}回発生したため自動生成を停止します`);
+          updateStatus(`連続エラーにより自動生成を停止しました（${consecutiveErrors}回）`);
+          autoGenerateChk.checked = false;
+          syncAutoGenerateButton();
+          disableAutoGenerate();
+          return;
+        }
+
+        isAutoGenerating = true;
+        generateBtn.click();
+      }
+
+      // エラー回復のためのリトライ機能
+      function scheduleErrorRecovery() {
+        if (!autoGenerateEnabled) return;
+
+        isInErrorRecovery = true;
+        updateStatus(`エラー回復中... ${ERROR_RETRY_DELAY/1000}秒後にリトライします`);
+
+        setTimeout(() => {
+          if (autoGenerateEnabled && !isGenerating) {
+            console.log(`エラー回復リトライ実行（連続エラー数: ${consecutiveErrors}）`);
+            isInErrorRecovery = false;
+            triggerGenerate();
+          }
+        }, ERROR_RETRY_DELAY);
+      }
+
+      // 生成成功時のエラーカウンターリセット
+      function resetErrorCounter() {
+        if (consecutiveErrors > 0) {
+          console.log(`エラーカウンターをリセット（前回: ${consecutiveErrors}回）`);
+          consecutiveErrors = 0;
+        }
+      }
+
+      // 4. 自動生成の有効化・無効化
+      function enableAutoGenerate() {
+        autoGenerateEnabled = true;
+      }
+      function disableAutoGenerate() {
+        autoGenerateEnabled = false;
+      }
+
+      // 歌詞や音量リングより前のキャプチャ段階で再生停止操作を受け取る。
+      function stopPlaybackFromMedia(event) {
+        event.stopPropagation();
+        const isLoopMode = autoGenerateEnabled || autoGenerateChk.checked;
+        const hasActivePlayback = isPlaying && !audioPlayer.paused;
+        if (!isLoopMode && !hasActivePlayback) return;
+
+        if (isLoopMode) {
+          autoGenerateChk.checked = false;
+          syncAutoGenerateButton();
+          disableAutoGenerate();
+          isAutoGenerating = false;
+          isInErrorRecovery = false;
+          if (activeGenerationController) {
+            activeGenerationController.abort();
+            activeGenerationController = null;
+          }
+          playQueue.length = 0;
+        }
+
+        audioPlayer.pause();
+        audioPlayer.currentTime = 0;
+        isPlaying = false;
+        lastUserAction = Date.now();
+        restoreInputView();
+        statusEl.style.display = 'block';
+        if (isLoopMode) {
+          audioPlayer.removeAttribute('src');
+          audioPlayer.load();
+          audioPlayer.style.display = 'none';
+          isGenerating = false;
+          spinner.style.display = 'none';
+          updateStatus('ループ生成を停止し、手動モードに切り替えました');
+        } else {
+          updateStatus('再生を停止しました');
+        }
+      }
+      document.getElementById('media-container').addEventListener(
+        'pointerdown', stopPlaybackFromMedia, true
+      );
+
+      // 5. チェックボックスのイベント
+      autoGenerateChk.addEventListener('change', (e) => {
+        syncAutoGenerateButton();
+        if (e.target.checked) {
+          enableAutoGenerate();
+          // チェックON時に即座に生成を開始するため、lastUserActionを過去にする
+          lastUserAction = Date.now() - AUTO_GENERATE_IDLE - 1;
+          checkAutoGenerateIdle(); // ← チェックON時に即時チェックして生成開始
+        } else {
+          disableAutoGenerate();
+        }
+      });
+      syncAutoGenerateButton();
+
+      // 6. ユーザー操作検知で自動生成を無効化
+      ['keydown', 'mousedown', 'touchstart', 'input'].forEach(evt => {
+        document.addEventListener(evt, (event) => {
+          // 画像領域は専用ハンドラーで停止表示まで行う。
+          if (event.target.closest && event.target.closest('#media-container, #auto_generate_btn')) return;
+          lastUserAction = Date.now();
+          if (autoGenerateEnabled) {
+            autoGenerateChk.checked = false;
+            syncAutoGenerateButton();
+            disableAutoGenerate();
+            // ユーザー操作時にエラーカウンターもリセット
+            resetErrorCounter();
+            isInErrorRecovery = false;
+          }
+        }, true);
+      });
+
+      // 8. 一定時間操作がなければ自動生成（playQueueが空のときのみ発動、再生中でもOK）
+      function checkAutoGenerateIdle() {
+        console.log("checkAutoGenerateIdle called");
+        console.log("playQueue.length =", playQueue.length);
+        console.log("autoGenerateEnabled=", autoGenerateEnabled);
+        console.log("lastUserAction=", lastUserAction);
+        console.log("consecutiveErrors=", consecutiveErrors);
+        console.log("isInErrorRecovery=", isInErrorRecovery);
+
+        if (
+          autoGenerateEnabled &&
+          !isInErrorRecovery &&  // エラー回復中でない
+          Date.now() - lastUserAction >= AUTO_GENERATE_IDLE &&
+          playQueue.length === 0 // キューが空のときのみ自動生成
+        ) {
+          triggerGenerate();
+        }
+        setTimeout(checkAutoGenerateIdle, 3000); // 3秒ごとにチェック
+      }
+      checkAutoGenerateIdle();
+
+      // 初期状態：起動画像は表示せず、入力部だけを表示
+      generateBtn.addEventListener('click', async () => {
+        if (isGenerating) return; // 二重実行防止
+        isGenerating = true;      // 生成中フラグON
+        activeGenerationController = new AbortController();
+        const generationSignal = activeGenerationController.signal;
+        // 起動画像と同じ背景の生成エリアへシームレスに切り替える。
+        document.getElementById('startup-hero').style.display = 'none';
+        document.getElementById('media-container').classList.add('is-loading');
+        // 旧曲の遅延イベントや待機項目が生成中表示を上書きしないようにする。
+        playQueue.length = 0;
+        // ループ生成中は再生曲の歌詞だけを表示し、次曲プレビューを重ねない。
+        if (isPlaying) {
+          document.querySelector('.overlay-text_a').style.display = 'none';
+        }
+        if (!isAutoGenerating) {
+          document.getElementById('image').style.display = 'none';
+          document.querySelector('.overlay-text').style.display = 'none';
+          document.getElementById('music_text').textContent =  ""
+          }
+          if (!isPlaying) {
+            // 再生中でなければスピナーとステータスを表示
+            // 生成中スピナーを表示
+            spinner.style.display = 'block';
+            statusEl.style.display = 'block';
+            updateStatus('作詞・曲データ作成中');
+          }
+
+          // Allow the browser to render the spinner before proceeding
+          await new Promise(resolve => setTimeout(resolve, 0));
+
+          // 元のプロンプト取得
+          const basePrompt = document.getElementById('user_input').value.trim();
+          // 任意入力取得
+          const title       = document.getElementById('title').value.trim();
+          const genre       = document.getElementById('genre').value.trim();
+          const mood        = document.getElementById('mood').value.trim();
+          const instruments = document.getElementById('instruments').value.trim();
+          // ひとつの文字列にまとめる
+          let fullPrompt = basePrompt;
+          if (title)       fullPrompt += `\nタイトル: ${title}`;
+          if (genre)       fullPrompt += `\nジャンル: ${genre}`;
+          if (mood)        fullPrompt += `\nムード: ${mood}`;
+          if (instruments) fullPrompt += `\n楽器: ${instruments}`;
+
+          let lyrics_dict;
+          let music_world;
+          let data_music_world;
+          let generatedMusicMessage = '';
+          let chosenBackgroundImage = activeBackgroundImage;
+          let chosenAutoAnimation = 'volume-ring';
+          const backgroundModeForGeneration = startupImageSelect.value;
+          let error=false
+          const formData0 = new FormData();
+          formData0.append('user_input', fullPrompt);
+          formData0.append('previouse_title', title || lastGeneratedTitle);
+          formData0.append('no_vocal', document.getElementById('no_vocal').checked);
+          formData0.append('music_backend', document.getElementById('music_backend').value);
+          try {
+            const response = await fetch('/generate_lyrics', {
+              method: 'POST', body: formData0, signal: generationSignal
+            });
+          if (!response.ok) {
+              let serverError = '';
+              try {
+                const errorData = await response.json();
+                serverError = errorData.err || errorData.detail || '';
+              } catch (_) {}
+              consecutiveErrors++;
+              console.error(`作詞エラー（連続${consecutiveErrors}回目）:`, response.status, serverError || response.statusText);
+
+              if (isAutoGenerating) {
+                // 自動生成モード時はエラー回復を試行
+                spinner.style.display = 'none';
+                statusEl.style.display = 'none';
+                isGenerating = false;
+                isAutoGenerating = false;
+                scheduleErrorRecovery();
+                return;
+              } else {
+                // 手動生成時は従来通りエラー表示
+                statusEl.textContent = serverError || `作詞・曲データ作成に失敗しました。`;
+                spinner.style.display = 'none';
+                error=true;
+                isGenerating = false;
+                isAutoGenerating = false;
+                return;
+              }
+            }
+
+          else {
+              error=false;
+            }
+          const data = await response.json();
+          data_music_world = JSON.stringify(data.music_world);
+          music_world = data.music_world.message;
+          console.log("data_music_world=", data_music_world);
+          lyrics_dict = JSON.stringify(data.lyrics_dict);
+                  } catch (err) {
+            if (err.name === 'AbortError') return;
+            consecutiveErrors++;
+            console.error(`作詞処理エラー（連続${consecutiveErrors}回目）:`, err);
+
+            if (isAutoGenerating) {
+              // 自動生成モード時はエラー回復を試行
+              spinner.style.display = 'none';
+              statusEl.style.display = 'none';
+              isGenerating = false;
+              isAutoGenerating = false;
+              scheduleErrorRecovery();
+              return;
+            } else {
+              // 手動生成時は従来通りエラー表示
+              alert(err.message);
+              error=true;
+              isGenerating = false;
+              isAutoGenerating = false; // ★ここで必ずリセット
+              return;
+            }
+          }
+          console.log("lyrics_dict=", lyrics_dict);
+          const lyrics_dict_js = JSON.parse(lyrics_dict);
+          console.log("lyrics_dict_js=", lyrics_dict_js);
+          const m_title= lyrics_dict_js.title;
+          lastGeneratedTitle = m_title;
+          console.log("xxx m_title=", m_title);
+          document.getElementById('result_title_a').textContent = m_title;
+          const lyrics_section= lyrics_dict_js.lyrics;
+          console.log("lyrics_section=", lyrics_section);
+          const lyrics_Text = Object.values(lyrics_section).join('\n');
+          const lyricsL_txt_lines = lyrics_Text.split('\n').map(line => line.trim()).filter(line => line);
+          console.log("lyricsL_txt_lines=", lyricsL_txt_lines);
+          if (lyricsL_txt_lines[0].length === 1) {
+            consecutiveErrors++;
+            console.error(`歌詞生成不良（連続${consecutiveErrors}回目）: 歌詞が短すぎます`);
+
+            if (isAutoGenerating) {
+              // 自動生成モード時はエラー回復を試行
+              spinner.style.display = 'none';
+              statusEl.style.display = 'none';
+              isGenerating = false;
+              isAutoGenerating = false;
+              scheduleErrorRecovery();
+              return;
+            } else {
+              // 手動生成時は従来通りエラー表示
+              statusEl.textContent = `歌詞が生成されませんでした。言葉を変えて再度お試しください。`;
+              spinner.style.display = 'none';
+              error=true;
+              isGenerating = false;
+              isAutoGenerating = false; // ★ここで必ずリセット
+              return;
+            }
+          }
+          const { width, height } = getImageSizeParams();
+          showCreationView(width, height);
+          // 手動・自動のどちらでも、作詞後は歌詞と解説を表示
+          {
+                console.log("xxx lyrics_Text=", lyrics_Text);
+                document.getElementById('lyrics_a').textContent = lyrics_Text;
+                if (!isPlaying) {
+                  document.querySelector('.overlay-text').style.display = 'none';
+                  document.querySelector('.overlay-text_a').style.display = 'flex';
+                } else {
+                  document.querySelector('.overlay-text_a').style.display = 'none';
+                }
+
+                // 曲の説明文抽出　lyrics_Textをリスト化（改行区切り）
+                const lyricsLines = lyrics_Text.split('\n').map(line => line.trim()).filter(line => line);
+                let musicMessage = music_world;// music_worldの本文
+                // 各歌詞文をmusic_worldから削除
+                lyricsLines.forEach(line => {
+                  musicMessage = musicMessage.replace(line, '');// 余分な空白も考慮して削除
+                });
+                musicMessage = musicMessage.replace(/---/g, '');      // --- を削除
+                musicMessage = musicMessage.replace(/\*\*/g, '');   // Markdownの強調記号を削除
+                musicMessage = musicMessage.replace(/\n/g, '').trim();// 改行を削除し、前後の空白もトリム
+                generatedMusicMessage = musicMessage;
+                console.log("musicMessage=", musicMessage);
+                // 現在曲の再生中は解説を上書きせず、次曲の開始時に切り替える。
+                if (!isPlaying) {
+                  document.getElementById('music_text').textContent = musicMessage;
+                }
+                  }
+          chosenBackgroundImage = resolveBackgroundForSong(
+            lyrics_dict_js,
+            generatedMusicMessage,
+            fullPrompt,
+            backgroundModeForGeneration
+          );
+          chosenAutoAnimation = automaticAnimation(
+            `${fullPrompt}\n${generatedMusicMessage}\n${JSON.stringify(lyrics_dict_js)}`
+          );
+          updateStatus('作詞完了・作曲開始');
+
+          const formData = new FormData();
+          formData.append('lyrics_dict', lyrics_dict);
+          // --- スライダーの値をここで form に追加 ---
+          formData.append('infer_step', document.getElementById('infer_step').value);
+          formData.append('guidance_scale', document.getElementById('guidance_scale').value);
+          formData.append('audio_duration', document.getElementById('audio_duration').value);
+          formData.append('ace_model', document.getElementById('ace_model').value);
+          formData.append('ace_memory_mode', document.getElementById('ace_memory_mode').value);
+          formData.append('vocal_language', document.getElementById('vocal_language').value);
+          formData.append('thinking', document.getElementById('thinking').checked);
+          formData.append('bpm', document.getElementById('bpm').value);
+          formData.append('key_scale', document.getElementById('key_scale').value);
+          formData.append('seed', document.getElementById('seed').value);
+          formData.append('music_backend', document.getElementById('music_backend').value);
+          formData.append('music_world', data_music_world);
+          formData.append('height', height);
+          formData.append('width', width);
+          // ボーカルなしチェックボックスの値を追加
+          const noVocalChecked = document.getElementById('no_vocal').checked;
+          console.log("ボーカルなしチェックボックス状態:", noVocalChecked);
+          formData.append('no_vocal', noVocalChecked);
+
+
+          try {
+            const response = await fetch('/generate_music', {
+              method: 'POST', body: formData, signal: generationSignal
+            });
+            if (!response.ok) {
+              consecutiveErrors++;
+              console.error(`音楽・画像生成エラー（連続${consecutiveErrors}回目）:`, response.status, response.statusText);
+
+              if (isAutoGenerating) {
+                // 自動生成モード時はエラー回復を試行
+                spinner.style.display = 'none';
+                statusEl.style.display = 'none';
+                isGenerating = false;
+                isAutoGenerating = false;
+                scheduleErrorRecovery();
+                return;
+              } else {
+                // 手動生成時は従来通りエラー表示
+                statusEl.textContent = `作曲に失敗しました。言葉を変えて再度お試しください。`;
+                spinner.style.display = 'none';
+                error=true;
+                isGenerating = false;
+                isAutoGenerating = false;
+                return;
+              }
+            }
+            const data = await response.json();
+            const lyrics_json_list = parseToList(data.lyrics_json);
+            const titleText = lyrics_json_list[0].value;
+            const sections = Object.values(lyrics_json_list[1].value);
+            const plainText = sections.join('\n\n');
+
+            // 生成成功時にエラーカウンターをリセット
+            resetErrorCounter();
+
+            // スピナーを隠す・ステータスも隠す
+            spinner.style.display = 'none';
+            statusEl.style.display = 'none';
+
+            // ここでは再生や画像のアップデートはせず、キューに書き込むだけ
+            console.log("push music and imae")
+            playQueue.push({
+              generationId: crypto.randomUUID(),
+              titleText,
+              plainText,
+              musicMessage: generatedMusicMessage,
+              image_base64: ['auto', 'random'].includes(backgroundModeForGeneration)
+                ? chosenBackgroundImage
+                : (data.image_base64 || chosenBackgroundImage),
+              backgroundCaption: activeBackgroundCaption,
+              autoAnimation: chosenAutoAnimation,
+              audio_base64: data.audio_base64
+            });
+
+        } catch (err) {
+          if (err.name === 'AbortError') return;
+          consecutiveErrors++;
+          console.error(`音楽・画像生成処理エラー（連続${consecutiveErrors}回目）:`, err);
+
+          if (isAutoGenerating) {
+            // 自動生成モード時はエラー回復を試行
+            spinner.style.display = 'none';
+            statusEl.style.display = 'none';
+            isGenerating = false;
+            isAutoGenerating = false;
+            scheduleErrorRecovery();
+          } else {
+            // 手動生成時は従来通りエラー表示
+            let errorMessage = '作曲が上手くできませんでした。';
+            if (err.message && err.message.includes('generate_image')) {
+              errorMessage += ' 画像生成サーバが利用できません。音楽のみ生成を試してください。';
+            } else if (err.message && err.message.includes('generate_song')) {
+              errorMessage += ' 音楽生成サーバが利用できません。設定を確認してください。';
+            } else {
+              errorMessage += ' 言葉を変えて再度お試しください。';
+            }
+            alert(errorMessage);
+            updateStatus(errorMessage);
+            spinner.style.display = 'none';
+            isGenerating = false;
+            isAutoGenerating = false; // ★ここで必ずリセット
+          }
+          error=true;
+        }
+        isGenerating = false;
+        isAutoGenerating = false; // 最後に必ずリセット
+        activeGenerationController = null;
+        processPlayQueue();
+      });
+
+      function parseToList(jsonStr) {
+        const obj = JSON.parse(jsonStr);
+        return Object.entries(obj).map(([key, value]) => ({
+          key,
+          value
+        }));
+      }
+
+      backBtn.addEventListener('click', () => {
+        disableAutoGenerate();
+        autoGenerateChk.checked = false;
+        if (activeGenerationController) activeGenerationController.abort();
+        playQueue.length = 0;
+        audioPlayer.pause();
+        audioPlayer.removeAttribute('src');
+        audioPlayer.load();
+        // DOM、タイマー、AudioContext、全状態を起動時の値へ確実に戻す。
+        window.location.reload();
+      });
+
+      // ステータスを更新する関数
+      function updateStatus(msg) {
+        statusEl.textContent = `${msg}`;
+      }
+
+      const pulseRing = document.getElementById('pulse-ring');
+      // 再生が始まったらオーディオコンテキストをセットアップ
+      audioPlayer.addEventListener('play', async () => {
+        isPlaying = true;
+        document.getElementById('media-container').classList.add('is-audio-playing');
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          source = audioCtx.createMediaElementSource(audioPlayer);
+          analyser = audioCtx.createAnalyser();
+          analyser.fftSize = 256;
+          source.connect(analyser);
+          analyser.connect(audioCtx.destination);
+          dataArray = new Uint8Array(analyser.frequencyBinCount);
+          waveformData = new Uint8Array(analyser.fftSize);
+
+          // 既存の音量解析・出力経路はそのままに、ステレオ表示専用の解析を分岐する。
+          stereoSplitter = audioCtx.createChannelSplitter(2);
+          leftAnalyser = audioCtx.createAnalyser();
+          rightAnalyser = audioCtx.createAnalyser();
+          leftAnalyser.fftSize = analyser.fftSize;
+          rightAnalyser.fftSize = analyser.fftSize;
+          source.connect(stereoSplitter);
+          stereoSplitter.connect(leftAnalyser, 0);
+          stereoSplitter.connect(rightAnalyser, 1);
+          leftWaveformData = new Uint8Array(leftAnalyser.fftSize);
+          rightWaveformData = new Uint8Array(rightAnalyser.fftSize);
+        }
+        if (audioCtx.state === 'suspended') { // 自動サスペンド対策
+          await audioCtx.resume();
+        }
+        requestAnimationFrame(animatePulse); // アニメーション開始
+      });
+
+      // アニメーションループ
+      function resizeVisualizerCanvas(canvas) {
+        const rect = canvas.getBoundingClientRect();
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        const width = Math.max(1, Math.round(rect.width * ratio));
+        const height = Math.max(1, Math.round(rect.height * ratio));
+        if (canvas.width !== width || canvas.height !== height) {
+          canvas.width = width;
+          canvas.height = height;
+        }
+        return { width, height };
+      }
+
+      function pastelColor(hue, alpha = 0.85, lightness = 76) {
+        return `hsla(${hue}, 78%, ${lightness}%, ${alpha})`;
+      }
+
+      function drawAudioVisualization(mode, frequency, waveform, metrics, timestamp) {
+        const canvas = document.getElementById('audio-visualizer-canvas');
+        const context = canvas.getContext('2d');
+        const { width, height } = resizeVisualizerCanvas(canvas);
+        context.clearRect(0, 0, width, height);
+        const { avg, bass, mid, treble, hue, volumeHue, leftWaveform, rightWaveform } = metrics;
+        const volume = avg / 255;
+        const bins = frequency.length;
+        context.lineCap = 'round';
+        context.lineJoin = 'round';
+
+        if (mode === 'waveform') {
+          const startX = width * .15;
+          const drawWidth = width * .70;
+          const center = height * .5;
+          const amplitude = height * (.12 + volume * .30);
+          context.beginPath();
+          waveform.forEach((value, index) => {
+            // 位相の異なる3波形を加算し、一本の密度ある波形として描く。
+            const second = waveform[(index + 9) % waveform.length];
+            const third = waveform[(index + 21) % waveform.length];
+            const sample = ((value - 128) + (second - 128) + (third - 128)) / (128 * 3);
+            const x = startX + index / (waveform.length - 1) * drawWidth;
+            const y = center + sample * amplitude;
+            index ? context.lineTo(x, y) : context.moveTo(x, y);
+          });
+          context.strokeStyle = pastelColor(volumeHue, .9, 78);
+          context.shadowColor = pastelColor(volumeHue, 1, 72);
+          context.shadowBlur = 12 + volume * 26;
+          context.lineWidth = 3 + volume * 7;
+          context.stroke();
+        } else if (mode === 'stereo-waves') {
+          const channels = [leftWaveform || waveform, rightWaveform || waveform];
+          const cx = width * .5;
+          const cy = height * .5;
+          const shortSide = Math.min(width, height);
+          const baseRadius = shortSide * .18;
+          const waveHeight = shortSide * (.035 + volume * .075);
+          channels.forEach((channel, layer) => {
+            context.beginPath();
+            channel.forEach((value, index) => {
+              const angle = index / (channel.length - 1) * Math.PI * 2 - Math.PI / 2;
+              const sample = (value - 128) / 128;
+              const radius = baseRadius + sample * waveHeight;
+              const x = cx + Math.cos(angle) * radius;
+              const y = cy + Math.sin(angle) * radius;
+              index ? context.lineTo(x, y) : context.moveTo(x, y);
+            });
+            context.closePath();
+            const channelHue = (volumeHue + layer * 70) % 360;
+            context.strokeStyle = pastelColor(channelHue, .76, 79);
+            context.shadowColor = pastelColor(channelHue, 1, 72);
+            context.shadowBlur = 12 + volume * 24;
+            context.lineWidth = 3 + volume * 6;
+            context.stroke();
+          });
+        } else if (mode === 'spectrum-bars') {
+          const count = 56;
+          const startX = width * .25;
+          const drawWidth = width * .50;
+          const gap = width * 0.004;
+          const barWidth = (drawWidth - gap * (count - 1)) / count;
+          for (let index = 0; index < count; index++) {
+            const position = index / (count - 1);
+            // 全帯域の上位1/5は表示せず、残る帯域だけを同じ描画エリアへ割り当てる。
+            const visibleBins = Math.max(1, Math.floor(bins * .8));
+            const binIndex = Math.min(visibleBins - 1, Math.floor(Math.pow(position, 1.35) * (visibleBins - 1)));
+            // 平方根による持ち上げを廃止し、強音でも上限へ張り付かない強度にする。
+            const value = Math.min(.72, (frequency[binIndex] / 255) * (1 + position * .35) * .34);
+            const barHeight = Math.max(3, value * height * .50);
+            const x = startX + index * (barWidth + gap);
+            const gradient = context.createLinearGradient(0, height * .75, 0, height * .75 - barHeight);
+            gradient.addColorStop(0, pastelColor((volumeHue + index * 3) % 360, .48, 72));
+            gradient.addColorStop(1, pastelColor((volumeHue + 95 + index * 3) % 360, .96, 86));
+            context.fillStyle = gradient;
+            context.shadowColor = pastelColor((volumeHue + index * 3) % 360, .9, 76);
+            context.shadowBlur = 7 + treble / 18;
+            context.fillRect(x, height * .75 - barHeight, barWidth, barHeight);
+          }
+        } else if (mode === 'radial-spectrum') {
+          const cx = width / 2, cy = height / 2;
+          const count = 120;
+          const innerRadius = Math.min(width, height) * (0.055 + bass / 5200);
+          const safeRadius = Math.min(width, height) * 0.31;
+          for (let index = 0; index < count; index++) {
+            const value = frequency[Math.floor(index / count * bins * .82)] / 255;
+            const angle = index / count * Math.PI * 2 - Math.PI / 2;
+            const length = Math.min(
+              safeRadius - innerRadius,
+              Math.min(width, height) * (0.03 + value * 0.225)
+            );
+            const startX = cx + Math.cos(angle) * innerRadius;
+            const startY = cy + Math.sin(angle) * innerRadius;
+            const endX = cx + Math.cos(angle) * (innerRadius + length);
+            const endY = cy + Math.sin(angle) * (innerRadius + length);
+            const lineHue = (volumeHue + index / count * 300 + value * 180) % 360;
+            context.beginPath();
+            context.moveTo(startX, startY);
+            context.lineTo(endX, endY);
+            context.strokeStyle = pastelColor(lineHue, 0.42 + value * 0.55, 82);
+            context.shadowColor = pastelColor(lineHue, 0.9, 76);
+            context.shadowBlur = 5 + value * 16 + treble / 28;
+            context.lineWidth = 1.5 + value * 6 + volume * 2;
+            context.stroke();
+          }
+        } else if (mode === 'bass-orbs') {
+          [bass, mid, treble].forEach((value, index) => {
+            const radius = Math.min(width, height) * (.08 + value / 850);
+            const x = width * (.25 + index * .25);
+            const y = height * (.5 + Math.sin(timestamp / 650 + index * 2) * .12);
+            const gradient = context.createRadialGradient(x, y, 0, x, y, radius);
+            gradient.addColorStop(0, pastelColor((hue + index * 80) % 360, .9, 88));
+            gradient.addColorStop(1, pastelColor((hue + index * 80) % 360, 0, 65));
+            context.fillStyle = gradient;
+            context.beginPath(); context.arc(x, y, radius, 0, Math.PI * 2); context.fill();
+          });
+        } else if (mode === 'frequency-ribbons') {
+          for (let ribbon = 0; ribbon < 4; ribbon++) {
+            context.beginPath();
+            for (let step = 0; step <= 80; step++) {
+              const position = step / 80;
+              const x = width * .15 + position * width * .70;
+              const bandStart = ribbon * .08;
+              const binIndex = Math.min(bins - 1, Math.floor((bandStart + position * .62) * bins));
+              const value = frequency[binIndex] / 255;
+              const wave = Math.sin(step * (.18 + ribbon * .045) + timestamp / (430 - ribbon * 45) + ribbon * 1.7);
+              const y = height * .5 + wave * value * height * (.12 + ribbon * .018);
+              step ? context.lineTo(x, y) : context.moveTo(x, y);
+            }
+            context.strokeStyle = pastelColor((volumeHue + ribbon * 72) % 360, .72, 80);
+            context.shadowColor = pastelColor((volumeHue + ribbon * 72) % 360, .9, 76);
+            context.shadowBlur = 9 + mid / 18;
+            context.lineWidth = 4 + volume * 7;
+            context.stroke();
+          }
+        } else if (mode === 'sound-particles') {
+          const particleCount = 16;
+          const areaX = width * .20;
+          const areaY = height * .20;
+          const areaWidth = width * .60;
+          const areaHeight = height * .60;
+          for (let index = 0; index < particleCount; index++) {
+            const value = frequency[index % bins] / 255;
+            const x = areaX + ((index * 97 + timestamp * (.018 + value * .06)) % areaWidth);
+            const rawY = index * 53 - timestamp * (.012 + value * .04);
+            const y = areaY + ((rawY % areaHeight) + areaHeight) % areaHeight;
+            const radius = 2 + value * 10 + treble / 80;
+            context.fillStyle = pastelColor((hue + index * 7) % 360, .35 + value * .6, 84);
+            context.shadowColor = context.fillStyle;
+            context.shadowBlur = 8 + value * 14;
+            context.beginPath(); context.arc(x, y, radius, 0, Math.PI * 2); context.fill();
+          }
+        }
+      }
+
+      function animatePulse() {
+        const mediaContainer = document.getElementById('media-container');
+        const motionVisualizer = document.getElementById('motion-visualizer');
+        if (audioPlayer.paused || audioPlayer.ended) {
+          pulseRing.style.transform = 'translate(-50%,-50%) scale(1)';
+          // サークルの色を初期色に戻す
+          //const BASE_HUE = 240; // ここを0(赤), 120(緑), 240(青)などに変更
+          pulseRing.style.borderColor = `hsl(${BASE_HUE}, 100%, 50%)`;
+          pulseRing.style.borderColor = 'transparent'; // ←ここをtransparentに
+          pulseRing.style.boxShadow = 'none';
+          motionVisualizer.style.setProperty('--audio-opacity', '0.55');
+          motionVisualizer.style.setProperty('--audio-scale', '1');
+          motionVisualizer.style.setProperty('--audio-hue', '0deg');
+          motionVisualizer.style.setProperty('--audio-saturation', '1');
+          motionVisualizer.style.setProperty('--audio-brightness', '1');
+          motionVisualizer.style.setProperty('--volume-hue', '210');
+          const canvas = document.getElementById('audio-visualizer-canvas');
+          canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+          return;
+        }
+        analyser.getByteFrequencyData(dataArray);
+        analyser.getByteTimeDomainData(waveformData);
+        if (leftAnalyser && rightAnalyser) {
+          leftAnalyser.getByteTimeDomainData(leftWaveformData);
+          rightAnalyser.getByteTimeDomainData(rightWaveformData);
+        }
+        // 音量レベル調整用の倍率
+        const VOLUME_GAIN = 1.0; // ←ここで音量感度を調整（例: 2.0で2倍、3.0で3倍など）
+        // 音量の平均値を取得し、調整
+        let avg = dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length;
+        avg = Math.min(avg * VOLUME_GAIN, 255); // 255を超えないようにクリップ
+        const volumeHue = (210 + (avg / 255) * 300) % 360;
+        motionVisualizer.style.setProperty('--volume-hue', volumeHue.toFixed(1));
+        motionVisualizer.style.setProperty(
+          '--audio-opacity',
+          (0.35 + (avg / 255) * 0.65).toFixed(2)
+        );
+
+        // 前景演出だけを周波数帯域へ連動させる。音量リングの処理は変更しない。
+        const binCount = dataArray.length;
+        const bassEnd = Math.max(1, Math.floor(binCount * 0.16));
+        const midEnd = Math.max(bassEnd + 1, Math.floor(binCount * 0.55));
+        const trebleStart = Math.floor(binCount * 0.55);
+        const bass = dataArray.slice(0, bassEnd).reduce((sum, value) => sum + value, 0) / bassEnd;
+        const midBins = dataArray.slice(bassEnd, midEnd);
+        const mid = midBins.reduce((sum, value) => sum + value, 0) / Math.max(1, midBins.length);
+        const trebleBins = dataArray.slice(trebleStart);
+        const treble = trebleBins.reduce((sum, value) => sum + value, 0) / Math.max(1, trebleBins.length);
+        let weightedFrequency = 0;
+        let spectralEnergy = 0;
+        dataArray.forEach((value, index) => {
+          weightedFrequency += index * value;
+          spectralEnergy += value;
+        });
+        const pitchPosition = spectralEnergy > 0
+          ? weightedFrequency / spectralEnergy / Math.max(1, binCount - 1)
+          : 0;
+        const foregroundScale = 0.92 + (avg / 255) * 0.34 + (bass / 255) * 0.24;
+        const foregroundHue = -70 + pitchPosition * 300;
+        const foregroundSaturation = 0.9 + (treble / 255) * 1.5;
+        const foregroundBrightness = 0.78 + (avg / 255) * 0.82 + (treble / 255) * 0.28;
+        motionVisualizer.style.setProperty('--audio-scale', foregroundScale.toFixed(3));
+        motionVisualizer.style.setProperty('--audio-hue', `${foregroundHue.toFixed(1)}deg`);
+        motionVisualizer.style.setProperty('--audio-saturation', foregroundSaturation.toFixed(2));
+        motionVisualizer.style.setProperty('--audio-brightness', foregroundBrightness.toFixed(2));
+
+        const activeAnimation = animationDefinitions.find(
+          item => mediaContainer.classList.contains(`animation-${item.id}`)
+        )?.id;
+        if (!['volume-ring', 'star-drift', 'neon-breathe', 'warm-lamp'].includes(activeAnimation)) {
+          drawAudioVisualization(
+            activeAnimation,
+            dataArray,
+            waveformData,
+            {
+              avg,
+              bass,
+              mid,
+              treble,
+              hue: (foregroundHue + 360) % 360,
+              volumeHue,
+              leftWaveform: leftWaveformData,
+              rightWaveform: rightWaveformData
+            },
+            performance.now()
+          );
+        }
+
+        if (mediaContainer.classList.contains('animation-volume-ring')) {
+          const scale = 1 + (avg / 255) * 0.3;
+          pulseRing.style.transform = `translate(-50%,-50%) scale(${scale})`;
+        // 音量に応じて色を変化させる（例：青→緑→黄→赤）
+        // 0〜255を0〜120（色相）にマッピング
+        //const hue = 240 - Math.round((avg / 255) * 360); // 240=青, -120=赤紫
+        //const BASE_HUE = 240; // ここを0(赤), 120(緑), 240(青)などに変更
+          const hue = BASE_HUE - Math.round((avg / 255) * 360);
+          pulseRing.style.borderColor = `hsl(${hue}, 100%, 50%)`;
+          pulseRing.style.boxShadow = `0 0 30px 10px hsl(${hue}, 100%, 60%, 0.5)`;
+        }
+        requestAnimationFrame(animatePulse);
+      }
+      // 保存ボタンの取得
+      const saveBtn = document.getElementById('save_btn');
+      saveBtn.addEventListener('click', () => {
+        // ファイル名（タイトル）を取得
+        const title = document.getElementById('result_title_a').textContent.trim() || 'music';
+        // 1. 歌詞テキストを保存
+        const lyrics = document.getElementById('lyrics_a').textContent;
+        const blobTxt = new Blob([lyrics], { type: 'text/plain' });
+        const aTxt = document.createElement('a');
+        aTxt.href = URL.createObjectURL(blobTxt);
+        aTxt.download = `${title}.txt`;
+        aTxt.click();
+        URL.revokeObjectURL(aTxt.href);
+        // 2. オーディオ（mp3/wav）を保存
+        // audioPlayer.srcがdata:audio/wav;base64,...形式の場合
+        const audioSrc = audioPlayer.src;
+        if (audioSrc.startsWith('data:audio/')) {
+          const arr = audioSrc.split(',');
+          const mime = arr[0].match(/data:audio\/([a-zA-Z0-9]+);base64/)[1];
+          const byteString = atob(arr[1]);
+          const ab = new ArrayBuffer(byteString.length);
+          const ia = new Uint8Array(ab);
+          for (let i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i);
+          }
+          const blobAudio = new Blob([ab], { type: `audio/${mime}` });
+          const aAudio = document.createElement('a');
+          aAudio.href = URL.createObjectURL(blobAudio);
+          aAudio.download = `${title}.${mime}`;
+          aAudio.click();
+          URL.revokeObjectURL(aAudio.href);
+        } else {
+          alert('音声データが見つかりません');
+        }
+      });
+    </script>
+
+  </body>
+</html>

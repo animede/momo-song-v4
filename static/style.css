@@ -1,0 +1,1199 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+}
+html, body {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+h1, h2, h3 {
+  color: #333;
+}
+.content-wrapper {
+  max-width: 1024px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+.app-header {
+  min-height: 62px;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin: 14px 0 28px;
+  padding: 0 1.25rem;
+  box-sizing: border-box;
+  color: #fff;
+  background: linear-gradient(90deg, #243b67, #6952a3);
+  border-radius: 7px;
+  box-shadow: 0 3px 10px rgba(25, 35, 60, 0.18);
+}
+.app-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.app-subtitle {
+  padding-left: 0.8rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.4);
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  opacity: 0.8;
+}
+.header-image-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-left: auto;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+.background-select-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.12rem;
+}
+.music-settings-row label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin: 0;
+}
+.header-image-selector select {
+  max-width: 12rem;
+  padding: 0.3rem 1.8rem 0.3rem 0.55rem;
+  color: #243b67;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 5px;
+}
+.startup-hero {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  margin: 0 0 1.25rem;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #14213b;
+  box-shadow: 0 5px 18px rgba(20, 30, 55, 0.2);
+}
+.startup-hero img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+#media-container {
+  display: none;
+  width: 100%;
+  margin: 1rem 0;
+  position: relative;
+  overflow: hidden;
+  background-color: #14213b;
+  background-image: url('/static/momo_song_startup.png');
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  border-radius: 6px;
+}
+#media-container.is-visible {
+  display: block;
+  cursor: pointer;
+}
+#media-container.is-loading {
+  display: block;
+  aspect-ratio: 16 / 9;
+}
+#media-container img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.overlay-container {
+  position: relative;
+  width: 100%;           /* 画像と同じ幅に */
+  max-width: none;       /* 親の max-width 制限を外す */
+  margin: 0 auto;        /* コンテナを中央寄せ */
+  height: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+#pulse-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 45%;
+  aspect-ratio: 1 / 1;     /* 高さを幅に揃える */
+  border: 4px solid transparent;  /* ←ここをtransparentに */
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(1);
+  pointer-events: none;
+  z-index: 1;
+}
+#motion-visualizer {
+  --audio-opacity: 0.55;
+  --audio-scale: 1;
+  --audio-hue: 0deg;
+  --audio-saturation: 1;
+  --audio-brightness: 1;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: var(--audio-opacity);
+  scale: var(--audio-scale);
+  filter:
+    hue-rotate(var(--audio-hue))
+    saturate(var(--audio-saturation))
+    brightness(var(--audio-brightness));
+  transform-origin: center;
+  transition: opacity 55ms linear, scale 55ms linear, filter 70ms linear;
+  will-change: opacity, scale, filter;
+}
+#ambient-visualizer {
+  position: absolute;
+  inset: 0;
+}
+#audio-visualizer-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+#motion-visualizer span {
+  position: absolute;
+  display: block;
+}
+#motion-visualizer span:nth-child(1) { --x: 7%; --y: 12%; --delay: 0s; --frame: 8%; --day-x: -12%; --angle: 0deg; --ring: 12%; }
+#motion-visualizer span:nth-child(2) { --x: 19%; --y: 22%; --delay: -.28s; --frame: 12%; --day-x: 3%; --angle: 45deg; --ring: 19%; }
+#motion-visualizer span:nth-child(3) { --x: 31%; --y: 32%; --delay: -.56s; --frame: 16%; --day-x: 18%; --angle: 90deg; --ring: 26%; }
+#motion-visualizer span:nth-child(4) { --x: 43%; --y: 42%; --delay: -.84s; --frame: 20%; --day-x: 33%; --angle: 135deg; --ring: 33%; }
+#motion-visualizer span:nth-child(5) { --x: 55%; --y: 52%; --delay: -1.12s; --frame: 24%; --day-x: 48%; --angle: 180deg; --ring: 40%; }
+#motion-visualizer span:nth-child(6) { --x: 67%; --y: 62%; --delay: -1.4s; --frame: 28%; --day-x: 63%; --angle: 225deg; --ring: 47%; }
+#motion-visualizer span:nth-child(7) { --x: 79%; --y: 72%; --delay: -1.68s; --frame: 32%; --day-x: 78%; --angle: 270deg; --ring: 54%; }
+#motion-visualizer span:nth-child(8) { --x: 91%; --y: 82%; --delay: -1.96s; --frame: 36%; --day-x: 93%; --angle: 315deg; --ring: 61%; }
+#motion-visualizer span:nth-child(9)  { --x: 13%; --y: 35%; --delay: -.14s; }
+#motion-visualizer span:nth-child(10) { --x: 25%; --y: 64%; --delay: -.42s; }
+#motion-visualizer span:nth-child(11) { --x: 37%; --y: 16%; --delay: -.70s; }
+#motion-visualizer span:nth-child(12) { --x: 49%; --y: 78%; --delay: -.98s; }
+#motion-visualizer span:nth-child(13) { --x: 61%; --y: 28%; --delay: -1.26s; }
+#motion-visualizer span:nth-child(14) { --x: 73%; --y: 58%; --delay: -1.54s; }
+#motion-visualizer span:nth-child(15) { --x: 85%; --y: 39%; --delay: -1.82s; }
+#motion-visualizer span:nth-child(16) { --x: 93%; --y: 68%; --delay: -2.10s; }
+#motion-visualizer span:nth-child(1) { --neon-x: 21%; }
+#motion-visualizer span:nth-child(2) { --neon-x: 29%; }
+#motion-visualizer span:nth-child(3) { --neon-x: 37%; }
+#motion-visualizer span:nth-child(4) { --neon-x: 45%; }
+#motion-visualizer span:nth-child(5) { --neon-x: 53%; }
+#motion-visualizer span:nth-child(6) { --neon-x: 61%; }
+#motion-visualizer span:nth-child(7) { --neon-x: 69%; }
+#motion-visualizer span:nth-child(8) { --neon-x: 77%; }
+.overlay-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: relative;
+  z-index: 0;
+  cursor: pointer;
+}
+
+.overlay-text {
+  position: absolute;
+  top: 5%;
+  left: 5%;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 0.5rem;
+  max-width: 45%;
+  box-sizing: border-box;
+  overflow: hidden;
+  max-height: 90%;
+  display: none;
+  flex-direction: column;
+  cursor: pointer;
+  pointer-events: none;
+  text-align: center;
+  display: none;
+  z-index: 2;
+}
+.overlay-text_a {
+  position: absolute;
+  top: 5%;
+  left: 5%;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 0.5rem;
+  max-width: 45%;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-align: center;
+  display: none;
+  max-height: 90%;
+  flex-direction: column;
+  cursor: pointer;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* 曲ごとに選べる12種類の背景演出 */
+#media-container.animation-volume-ring #pulse-ring { display: block; }
+#media-container:not(.animation-volume-ring) #pulse-ring { display: none; }
+#media-container.animation-volume-ring #motion-visualizer { display: none; }
+#media-container:not(.animation-volume-ring) #motion-visualizer { display: block; }
+#media-container:not(.animation-star-drift):not(.animation-neon-breathe):not(.animation-warm-lamp) #ambient-visualizer { display: none; }
+#media-container.animation-star-drift #audio-visualizer-canvas,
+#media-container.animation-neon-breathe #audio-visualizer-canvas,
+#media-container.animation-warm-lamp #audio-visualizer-canvas { display: none; }
+
+/* はっきり見える前景モーション。歌詞より背面（z-index:1）で動作する。 */
+#media-container.animation-star-drift #motion-visualizer span {
+  left: var(--x);
+  top: 18%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: hsl(var(--volume-hue, 210), 86%, 88%);
+  box-shadow: 0 0 18px 7px hsla(var(--volume-hue, 210), 92%, 78%, .9);
+  animation: visual-star-float 3s ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+#media-container.animation-neon-breathe #motion-visualizer span {
+  left: var(--neon-x);
+  bottom: 5%;
+  width: 5px;
+  height: 56%;
+  background: linear-gradient(transparent, rgba(175,235,255,.95), rgba(235,185,255,.95), transparent);
+  box-shadow: 0 0 22px rgba(180,225,255,.9);
+  animation: visual-neon-bars 1.8s ease-in-out infinite alternate;
+  animation-delay: var(--delay);
+}
+#media-container.animation-neon-breathe #motion-visualizer span:nth-child(n+9),
+#media-container.animation-warm-lamp #motion-visualizer span:nth-child(n+9) { display: none; }
+#media-container.animation-warm-lamp #motion-visualizer span {
+  left: var(--x);
+  top: 24%;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(255,225,205,.72);
+  box-shadow: 0 0 38px 18px rgba(255,205,185,.52);
+  animation: visual-warm-orb 2.8s ease-in-out infinite alternate;
+  animation-delay: var(--delay);
+}
+#media-container.animation-star-drift #motion-visualizer span:nth-child(3n+2),
+#media-container.animation-warm-lamp #motion-visualizer span:nth-child(3n+2) { top: 48%; }
+#media-container.animation-star-drift #motion-visualizer span:nth-child(3n),
+#media-container.animation-warm-lamp #motion-visualizer span:nth-child(3n) { top: 70%; }
+#media-container #motion-visualizer span { animation-play-state: paused; }
+#media-container.is-audio-playing #motion-visualizer span { animation-play-state: running; }
+#media-container:not(.animation-star-drift):not(.animation-neon-breathe):not(.animation-warm-lamp) #motion-visualizer {
+  scale: 1;
+}
+
+@keyframes visual-star-float { 0%, 100% { transform: translate(0, 18px) scale(.5); opacity: .2; } 50% { transform: translate(22px, -22px) scale(1.5); opacity: 1; } }
+@keyframes visual-neon-bars { from { transform: scaleY(.25); opacity: .35; } to { transform: scaleY(1); opacity: 1; } }
+@keyframes visual-warm-orb { from { transform: translateY(15px) scale(.55); opacity: .25; } to { transform: translateY(-18px) scale(1.25); opacity: .85; } }
+
+@media (prefers-reduced-motion: reduce) {
+  #media-container #motion-visualizer span { animation: none !important; }
+}
+.lyrics-title {
+  flex: 0 0 auto;
+  margin: 5px 0 0;
+  padding: 0 0 0.65rem;
+  font-size: 1.5rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+.lyrics-title-small {
+  font-size: 1.3rem;
+}
+.lyrics-scroll-area {
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-behavior: smooth;
+}
+.lyrics-scroll-area::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+#lyrics_a {
+  margin: 0;
+}
+#lyrics {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.accordion {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 auto;
+  overflow: hidden;
+  border: 1px solid rgba(88, 103, 155, .18);
+  border-radius: 14px;
+  background: rgba(250, 251, 255, .92);
+  box-shadow: 0 10px 30px rgba(39, 49, 88, .08);
+}
+.accordion-toggle {
+  display: none;
+}
+.accordion-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  min-height: 48px;
+  padding: 0 1.15rem;
+  border: 0;
+  color: #29365c;
+  background: linear-gradient(120deg, #f3f6ff 0%, #f9f6ff 100%);
+  font-size: .94rem;
+  font-weight: 700;
+  letter-spacing: .025em;
+  user-select: none;
+  position: relative;
+  transition: color .2s ease, background .2s ease;
+}
+.accordion-label::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  margin-right: .75rem;
+  border-right: 2px solid #6a63a9;
+  border-bottom: 2px solid #6a63a9;
+  transform: rotate(-45deg);
+  transition: transform .25s ease;
+}
+.accordion-toggle:checked + .accordion-label::before {
+  transform: rotate(45deg) translateY(-2px);
+}
+.accordion-toggle:checked + .accordion-label {
+  color: #504993;
+  background: linear-gradient(120deg, #edf2ff 0%, #f5efff 100%);
+}
+.accordion-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .35s ease, padding .35s ease;
+  border: 0;
+  padding: 0 1rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  background:
+    radial-gradient(circle at 95% 0%, rgba(173, 153, 229, .10), transparent 28%),
+    #fbfcff;
+}
+.accordion-toggle:checked + .accordion-label + .accordion-content {
+  max-height: 1200px;
+  padding: 1.2rem;
+}
+.accordion-content .form-item input[type="text"],
+.accordion-content .form-item textarea {
+  height: 2rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+/* 既存の .form-item ルールを上書き */
+.accordion-content .form-item {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 200px;    /* 最低でも200pxを確保 */
+  min-width: 200px;   /* ここで折り返し発生を保証 */
+}
+.accordion-content .form-item > label,
+.slider-container .slider-item > label,
+.slider-container .slider-item > strong {
+  color: #505a78;
+  font-size: .76rem;
+  font-weight: 650;
+  letter-spacing: .015em;
+}
+.accordion-content input[type="text"],
+.accordion-content input[type="number"],
+.accordion-content select {
+  height: 38px;
+  min-height: 38px;
+  padding: .48rem .7rem;
+  border: 1px solid #d9deed;
+  border-radius: 9px;
+  outline: none;
+  color: #29334f;
+  background: rgba(255, 255, 255, .94);
+  box-shadow: 0 2px 7px rgba(42, 53, 91, .035);
+  font: inherit;
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.accordion-content input[type="text"]:hover,
+.accordion-content input[type="number"]:hover,
+.accordion-content select:hover {
+  border-color: #b9c1dd;
+}
+.accordion-content input[type="text"]:focus,
+.accordion-content input[type="number"]:focus,
+.accordion-content select:focus {
+  border-color: #7a73bd;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(112, 101, 181, .13);
+}
+.accordion-content input::placeholder { color: #a1a8bb; }
+.accordion-content .music-backend-row {
+  display: grid;
+  grid-template-columns: minmax(190px, 1.2fr) minmax(240px, 1.65fr) minmax(180px, 1fr) minmax(120px, .7fr) minmax(120px, .65fr);
+  gap: 0.75rem;
+  flex: 1 1 100%;
+  width: 100%;
+  padding: .9rem;
+  box-sizing: border-box;
+  border: 1px solid rgba(208, 214, 234, .8);
+  border-radius: 12px;
+  background: rgba(246, 248, 255, .78);
+}
+.accordion-content .music-detail-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .75rem;
+  flex: 1 1 100%;
+  width: 100%;
+  padding: .9rem;
+  box-sizing: border-box;
+  border: 1px solid rgba(208, 214, 234, .8);
+  border-radius: 12px;
+  background: rgba(246, 248, 255, .78);
+}
+.accordion-content .music-detail-row .form-item {
+  min-width: 0;
+}
+.music-detail-row select,
+.music-detail-row input[type="number"] {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.music-detail-row .thinking-item {
+  justify-content: flex-end;
+}
+.accordion-content .music-backend-row .form-item {
+  min-width: 0;
+}
+.music-backend-row select,
+.music-backend-row input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+@media (max-width: 1050px) {
+  .accordion-content .music-backend-row {
+    grid-template-columns: repeat(2, minmax(200px, 1fr));
+  }
+  .accordion-content .music-detail-row {
+    grid-template-columns: repeat(2, minmax(200px, 1fr));
+  }
+}
+
+/* 3つの生成スライダーと音楽設定を同じ行に固定する。 */
+.slider-container {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(190px, .9fr);
+  gap: 1rem;
+  flex: 1 1 100%;
+  width: 100%;
+  box-sizing: border-box;
+}
+.slider-container .slider-item {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: .75rem .85rem;
+  border: 1px solid rgba(208, 214, 234, .8);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, .72);
+}
+.slider-container .slider-item:not(.music-settings-row) > label {
+  display: flex;
+  align-items: flex-end;
+  min-height: 2.6em;
+  margin: 0 0 .25rem;
+  line-height: 1.3;
+}
+.slider-container .music-settings-row {
+  justify-content: flex-start;
+  gap: .55rem;
+}
+/* スライダー本体は親幅いっぱいに */
+.slider-item input[type="range"] {
+  width: 100%;
+  box-sizing: border-box;
+  height: 5px;
+  border-radius: 999px;
+  outline: none;
+  accent-color: #6e67ad;
+  background: #dfe3f1;
+}
+.slider-item > span {
+  align-self: flex-end;
+  min-width: 2.8rem;
+  margin-top: .42rem;
+  padding: .16rem .46rem;
+  border-radius: 999px;
+  color: #5a538f;
+  background: #eeecfa;
+  font-size: .72rem;
+  font-weight: 700;
+  text-align: center;
+}
+.accordion-content input[type="checkbox"] {
+  appearance: none;
+  width: 34px;
+  height: 19px;
+  flex: 0 0 auto;
+  margin: 0;
+  border-radius: 999px;
+  background: #cdd2df;
+  box-shadow: inset 0 0 0 1px rgba(56, 65, 94, .08);
+  cursor: pointer;
+  position: relative;
+  transition: background .2s ease;
+}
+.accordion-content input[type="checkbox"]::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(20, 27, 55, .25);
+  transition: transform .2s ease;
+}
+.accordion-content input[type="checkbox"]:checked { background: #6e67ad; }
+.accordion-content input[type="checkbox"]:checked::after { transform: translateX(15px); }
+.accordion-content .thinking-item label,
+.slider-container .music-settings-row label {
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+  min-height: 38px;
+  color: #414b68;
+}
+.slider-item {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+@media (max-width: 700px) {
+  .slider-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Momo Song modern application shell ───────────────────────────── */
+:root {
+  --ui-bg: #f3f5fb;
+  --ui-surface: rgba(255, 255, 255, .88);
+  --ui-surface-solid: #fff;
+  --ui-text: #27314d;
+  --ui-muted: #778099;
+  --ui-line: rgba(112, 124, 164, .17);
+  --ui-primary: #665fa9;
+  --ui-primary-dark: #514a91;
+  --ui-accent: #347c92;
+  --ui-shadow: 0 14px 38px rgba(38, 48, 82, .10);
+}
+html { background: var(--ui-bg); }
+body {
+  min-height: 100vh;
+  color: var(--ui-text);
+  background:
+    radial-gradient(circle at 10% 0%, rgba(142, 151, 218, .17), transparent 28rem),
+    radial-gradient(circle at 90% 12%, rgba(181, 151, 211, .13), transparent 26rem),
+    linear-gradient(180deg, #f8f9fd 0%, var(--ui-bg) 55%, #eef1f8 100%);
+  font-family: Inter, "Noto Sans JP", "Hiragino Sans", "Yu Gothic UI", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3 { color: var(--ui-text); }
+.content-wrapper {
+  max-width: 1120px;
+  padding: 0 24px;
+}
+.app-header {
+  min-height: 68px;
+  margin: 18px 0 24px;
+  padding: 0 1.35rem;
+  border: 1px solid rgba(255, 255, 255, .28);
+  border-radius: 16px;
+  background:
+    linear-gradient(110deg, rgba(38, 53, 101, .98), rgba(102, 79, 151, .96));
+  box-shadow: 0 14px 34px rgba(37, 45, 87, .20);
+  backdrop-filter: blur(16px);
+}
+.app-title {
+  font-size: 1.28rem;
+  letter-spacing: .055em;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, .16);
+}
+.app-subtitle { opacity: .72; }
+.header-image-selector { gap: .65rem; }
+.header-image-selector > label {
+  color: rgba(255, 255, 255, .7);
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .05em;
+}
+.header-image-selector select {
+  height: 36px;
+  max-width: 13.5rem;
+  padding: 0 2rem 0 .7rem;
+  border: 1px solid rgba(255, 255, 255, .22);
+  border-radius: 9px;
+  outline: none;
+  color: #303a60;
+  background: rgba(255, 255, 255, .92);
+  box-shadow: 0 4px 14px rgba(18, 25, 57, .12);
+  transition: box-shadow .18s ease, background .18s ease;
+}
+.header-image-selector select:focus {
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(216, 210, 255, .25);
+}
+.startup-hero,
+#media-container {
+  border: 1px solid rgba(255, 255, 255, .5);
+  border-radius: 18px;
+  box-shadow: var(--ui-shadow);
+}
+.startup-hero { margin-bottom: 1.1rem; }
+#media-container { margin: 1rem 0 1.1rem; }
+.overlay-text,
+.overlay-text_a {
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(255, 255, 255, .20);
+  border-radius: 14px;
+  background: linear-gradient(145deg, rgba(13, 19, 36, .68), rgba(23, 28, 51, .48));
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .22);
+  backdrop-filter: blur(10px) saturate(120%);
+  text-shadow: 0 1px 5px rgba(0, 0, 0, .65);
+}
+.lyrics-title {
+  margin-top: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, .18);
+  font-weight: 750;
+  letter-spacing: .03em;
+}
+#lyrics, #lyrics_a { line-height: 1.72; }
+.input-group {
+  gap: .75rem;
+  padding: .8rem;
+  border: 1px solid var(--ui-line);
+  border-radius: 15px;
+  background: var(--ui-surface);
+  box-shadow: 0 9px 28px rgba(41, 51, 87, .08);
+  backdrop-filter: blur(12px);
+}
+.input-group textarea {
+  height: 54px;
+  min-height: 54px;
+  padding: .75rem .9rem;
+  border: 1px solid #d9deec;
+  border-radius: 10px;
+  outline: none;
+  color: var(--ui-text);
+  background: #fbfcff;
+  font: inherit;
+  line-height: 1.45;
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.input-group textarea:focus {
+  border-color: #7770b8;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(102, 95, 169, .12);
+}
+.input-group textarea::placeholder { color: #9ba3b7; }
+.button-row { gap: .45rem; height: 54px; }
+.button-row button {
+  height: 54px;
+  border: 0;
+  border-radius: 10px !important;
+  font: inherit;
+  font-size: .84rem;
+  font-weight: 720;
+  letter-spacing: .015em;
+  box-shadow: 0 5px 14px rgba(36, 48, 83, .13);
+  transition: transform .16s ease, box-shadow .16s ease, filter .16s ease;
+}
+.button-row button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 19px rgba(36, 48, 83, .18);
+  filter: brightness(1.04);
+}
+.button-row button:active { transform: translateY(0); }
+.button-row button#generate_btn {
+  background: linear-gradient(135deg, #625ba6, #746ab7);
+}
+.button-row button#back_btn {
+  color: #4c5672;
+  background: #eef1f7;
+  box-shadow: inset 0 0 0 1px #d9deeb;
+}
+.button-row button#auto_generate_btn {
+  background: linear-gradient(135deg, #357d92, #4193a2);
+}
+.button-row button#save_btn {
+  background: linear-gradient(135deg, #536b9a, #617cae);
+}
+#auto_generate_btn.is-active {
+  background: linear-gradient(135deg, #d97720, #e8953f);
+}
+.form-section {
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  margin-bottom: 1.1rem;
+}
+.result-layout {
+  gap: 1.25rem;
+  margin: 0 0 1rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--ui-line);
+  border-radius: 14px;
+  background: var(--ui-surface);
+  box-shadow: 0 9px 26px rgba(42, 52, 89, .075);
+  backdrop-filter: blur(12px);
+}
+.music-description h3 {
+  margin-bottom: .35rem;
+  font-size: .78rem;
+  color: var(--ui-muted);
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+#music_text { color: #3f4966; font-size: .92rem; line-height: 1.65; }
+.audio-container audio {
+  border-radius: 999px;
+  filter: saturate(.82) contrast(.96);
+}
+.song-history {
+  padding: 1rem;
+  border: 1px solid var(--ui-line);
+  border-radius: 15px;
+  background: var(--ui-surface);
+  box-shadow: 0 10px 28px rgba(43, 53, 88, .075);
+}
+.song-history-heading { margin-bottom: .7rem; }
+.song-history h3 { font-size: .96rem; letter-spacing: .025em; }
+#song-history-empty {
+  color: var(--ui-muted);
+  background: #f4f6fb;
+  border: 1px dashed #d7dce9;
+  text-align: center;
+}
+#song-history-list {
+  border-radius: 10px;
+  background: rgba(249, 250, 253, .82);
+}
+.song-history-row {
+  border-color: #e5e8f1;
+  transition: background .16s ease;
+}
+.song-history-row:hover { background: #f0f3fa; }
+.song-history-title { color: #35405e; font-weight: 650; }
+.history-icon-button {
+  transition: transform .15s ease, background .15s ease;
+}
+.history-icon-button:hover { transform: translateY(-1px); }
+#download_all_songs {
+  border: 0;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #5e579d, #7067ad);
+  box-shadow: 0 5px 13px rgba(74, 66, 137, .18);
+  font-weight: 700;
+}
+.model-credits { color: #9299aa; letter-spacing: .035em; }
+#loading-spinner {
+  border-color: rgba(255, 255, 255, .28);
+  border-top-color: #fff;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, .25));
+}
+
+@media (max-width: 700px) {
+  .content-wrapper { padding: 0 12px; }
+  .app-header { margin: 10px 0 18px; border-radius: 13px; }
+  .input-group { padding: .65rem; }
+  .button-row { gap: .35rem; }
+  .button-row button { min-width: 0; width: auto !important; }
+  .overlay-text, .overlay-text_a { max-width: 68%; }
+  .song-history { padding: .75rem; }
+}
+.input-group {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+  box-sizing: border-box;
+  align-items: stretch;
+}
+.input-group textarea {
+  flex: 1;
+  height: 52px;
+  min-height: 52px;
+  resize: none;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.button-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.button-row {
+  display: flex;
+  gap: 0.5rem;
+  height: 52px;
+  box-sizing: border-box;
+}
+/* 生成／戻るボタンをオリジナルのグリーンに */
+.button-row button#generate_btn,
+.button-row button#back_btn,
+.button-row button#auto_generate_btn,
+.button-row button#save_btn {
+  background-color: #28a745;   /* 緑 */
+  color: #fff;                 /* 白文字 */
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+/* ホバー時に少し濃く */
+.button-row button#generate_btn:hover,
+.button-row button#back_btn:hover,
+.button-row button#auto_generate_btn:hover,
+.button-row button#save_btn:hover {
+  background-color: #218838;
+}
+#auto_generate_btn.is-active {
+  background-color: #dc7b19;
+}
+#auto_generate_btn.is-active:hover {
+  background-color: #bd6510;
+}
+.button-row button {
+  height: 52px;
+  padding: 0 0.9rem;
+  white-space: nowrap;
+}
+#generate_btn { width: 150px; }
+#back_btn     { width: 100px; }
+#auto_generate_btn { width: 125px; }
+#save_btn { width: 80px; }
+.status-text {
+  margin-top: 0.25rem;
+  font-size: 0.9rem;
+  color: #555;
+  min-height: 1em;
+  line-height: 1em;
+}
+.controls-wrapper {
+  display: flex;
+  flex-wrap: wrap;      /* 子要素が狭くなると折り返す */
+  align-items: flex-start;
+  gap: 1.5rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+.form-section {
+  flex: 1;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  min-width: 0;
+}
+.result-layout {
+  display: none;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 10px;
+}
+.music-description {
+  min-width: 0;
+}
+.music-description h3 {
+  margin: 0 0 0.5rem;
+}
+#music_text {
+  margin: 0;
+  font-size: 1rem;
+  color: #333;
+  line-height: 1.6;
+}
+.audio-container {
+  width: 300px;
+}
+.audio-container audio {
+  display: none;
+  width: 300px;
+  max-width: 100%;
+}
+
+/* スピナー本体（最初は非表示） */
+#loading-spinner {
+  display: none;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 48px;
+  height: 48px;
+  margin: -24px 0 0 -24px;      /* 半分だけ上/左にずらして中央に */
+  border: 6px solid rgba(128,128,128,0.6);
+  border-top: 6px solid rgba(64,64,64,1);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  z-index: 3;                    /* テキストより前面に */
+}
+
+/* 回転アニメーション */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}/* スピナーと同じく overlay-container を基準に絶対配置 */
+
+#status {
+  position: absolute;
+  /* スピナーの中心から少し下に */
+  top: calc(55% + 32px);
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff;
+  font-size: 1rem;
+  text-shadow: 0 0 6px rgba(0,0,0,1);
+  z-index: 10;       /* スピナーより手前に */
+}
+
+#loading-text {
+  display: none;               /* JSで表示切替 */
+  width: 100%;
+  text-align: center;          /* 中央寄せ */
+  font-size: 1.5rem;           /* お好みで調整 */
+  color: #333;                 /* 背景に合わせて色を調整 */
+  margin: 1rem 0;              /* 上下の余白 */
+  animation: blink 1s step-end infinite;
+}
+
+/* 点滅アニメ */
+@keyframes blink {
+  0%,  49% { opacity: 1; }
+  50%,100% { opacity: 0; }
+}
+
+/* #generate_form を content-wrapper 幅いっぱいに */
+.content-wrapper > #generate_form {
+  width: 100%;
+  box-sizing: border-box; /* パディング込みで100% */
+  margin: 1rem auto 0;    /* 上マージンはお好みで */
+  padding: 0;             /* 必要なら調整 */
+}
+.song-history {
+  margin: 0.75rem 0 1.5rem;
+}
+.model-credits {
+  margin: -.65rem 0 1.2rem;
+  color: #8a8f99;
+  font-size: .68rem;
+  letter-spacing: .02em;
+  text-align: center;
+}
+.song-history h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+.song-history-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 0 .45rem;
+}
+#download_all_songs {
+  padding: .38rem .8rem;
+  border: 1px solid #486f9e;
+  border-radius: 5px;
+  color: #fff;
+  background: #486f9e;
+  cursor: pointer;
+  font-size: .78rem;
+}
+#download_all_songs:hover:not(:disabled) { background: #365b87; }
+#download_all_songs:disabled {
+  cursor: default;
+  opacity: .45;
+}
+#song-history-empty {
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  color: #777;
+  background: #f7f7f8;
+  border-radius: 5px;
+  font-size: 0.88rem;
+}
+#song-history-list {
+  max-height: 840px; /* 1行42px × 20行 */
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-gutter: stable;
+}
+.song-history-row {
+  height: 42px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.35rem 0.5rem 0.35rem 0.8rem;
+  border-bottom: 1px solid #ddd;
+}
+.song-history-info {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.8rem;
+}
+.song-history-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.song-history-meta {
+  flex: none;
+  color: #777;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+.song-history-actions {
+  display: flex;
+  gap: 0.3rem;
+}
+.history-icon-button {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: #365b87;
+  background: #edf3f9;
+  cursor: pointer;
+  font-size: 1rem;
+}
+.history-icon-button:hover {
+  background: #dce9f5;
+}
+.history-play-button {
+  color: #fff;
+  background: #486f9e;
+  font-size: .9rem;
+}
+.history-play-button:hover {
+  background: #365b87;
+}
+.history-delete-button {
+  color: #a23d3d;
+  background: #faeeee;
+}
+.history-delete-button:hover {
+  background: #f4dada;
+}
+
+@media (max-width: 700px) {
+  .app-header {
+    margin: 10px 10px 22px;
+    padding: 0 0.75rem;
+  }
+  .app-subtitle {
+    display: none;
+  }
+  .header-image-selector label {
+    display: none;
+  }
+  .header-image-selector select {
+    max-width: 9.5rem;
+  }
+  .result-layout {
+    grid-template-columns: 1fr;
+  }
+  .audio-container,
+  .audio-container audio {
+    width: 100%;
+  }
+  .input-group {
+    flex-direction: column;
+  }
+  .button-row {
+    width: 100%;
+    height: auto;
+    flex-wrap: wrap;
+  }
+  .button-row button {
+    flex: 1 1 120px;
+  }
+}
+
+/* Final theme precedence over legacy component rules. */
+.form-section {
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  margin-bottom: 1.1rem;
+}
+.button-row button#generate_btn {
+  color: #fff;
+  background: linear-gradient(135deg, #625ba6, #746ab7);
+  border-radius: 10px;
+}
+.button-row button#back_btn {
+  color: #4c5672;
+  background: #eef1f7;
+  box-shadow: inset 0 0 0 1px #d9deeb;
+  border-radius: 10px;
+}
+.button-row button#auto_generate_btn {
+  color: #fff;
+  background: linear-gradient(135deg, #357d92, #4193a2);
+  border-radius: 10px;
+}
+.button-row button#save_btn {
+  color: #fff;
+  background: linear-gradient(135deg, #536b9a, #617cae);
+  border-radius: 10px;
+}
+.button-row button#generate_btn:hover,
+.button-row button#back_btn:hover,
+.button-row button#auto_generate_btn:hover,
+.button-row button#save_btn:hover { filter: brightness(1.06); }
+#auto_generate_btn.is-active {
+  background: linear-gradient(135deg, #d97720, #e8953f);
+}
+.song-history {
+  margin: .75rem 0 1.5rem;
+  padding: 1rem;
+  border: 1px solid var(--ui-line);
+  border-radius: 15px;
+  background: var(--ui-surface);
+  box-shadow: 0 10px 28px rgba(43, 53, 88, .075);
+}
+.song-history h3 { margin: 0; }
+#download_all_songs {
+  border: 0;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #5e579d, #7067ad);
+}
+@media (max-width: 700px) {
+  .app-header { margin: 10px 0 18px; }
+  .content-wrapper { padding: 0 12px; }
+  .song-history { padding: .75rem; }
+}

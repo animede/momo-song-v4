@@ -1,0 +1,65 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 生成ファイル
+userdata/
+*.wav
+*.mp3
+*.png
+!static/*.png
+
+# ログ
+*.log
+logs/
+
+# 設定ファイル
+.env
+config.json
+config.toml
+runtime/
+
+# ローカルモデル・外部ソース・ビルド成果物
+models/*
+!models/.gitkeep
+vendor/
+build/
+build-*/
+*.gguf
+*.safetensors
+*.bin
+
+# テスト・カバレッジ・各種キャッシュ
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# ローカル証明書・鍵
+*.pem
+*.key
+*.pfx
+*.p12
+
+# 一時ファイル
+temp/
+tmp/

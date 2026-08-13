@@ -1,0 +1,9 @@
+Momo Song
+Copyright 2026 Momo Song contributors
+
+This product includes software developed by the ACE-Step, acestep.cpp,
+llama.cpp, llama-cpp-python, FastAPI and other open-source communities.
+
+ACE-Step and Gemma model weights are not part of this repository. Their
+respective upstream licenses and terms apply when users download or use them.
+Release packages must include a complete third-party license inventory.

@@ -1,0 +1,6 @@
+-r requirements.txt
+
+# Select the wheel index matching the target CUDA runtime when installing, for example:
+# python -m pip install -r requirements-cuda.txt \
+#   --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu125
+llama-cpp-python==0.3.34
