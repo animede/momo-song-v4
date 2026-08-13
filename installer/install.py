@@ -24,6 +24,7 @@ LLAMA_VERSION = "0.3.34"
 RELEASE_REPOSITORY = os.getenv("MOMO_RELEASE_REPOSITORY", "animede/momo-song-v4")
 RELEASE_TAG = os.getenv("MOMO_RELEASE_TAG", "latest")
 RELEASE_BASE = f"https://github.com/{RELEASE_REPOSITORY}/releases"
+_resolved_release_tag: str | None = None
 ACESTEP_REPOSITORY = "https://github.com/ServeurpersoCom/acestep.cpp.git"
 ACESTEP_WINDOWS_BASE = "https://www.serveurperso.com/temp/acestep.cpp-win64"
 ACESTEP_WINDOWS_FILES = (
@@ -86,9 +87,23 @@ def install_python(backend: str, cuda: str) -> None:
 
 
 def release_asset_url(asset: str) -> str:
-    if RELEASE_TAG == "latest":
-        return f"{RELEASE_BASE}/latest/download/{asset}"
-    return f"{RELEASE_BASE}/download/{RELEASE_TAG}/{asset}"
+    global _resolved_release_tag
+    if RELEASE_TAG != "latest":
+        tag = RELEASE_TAG
+    else:
+        if _resolved_release_tag is None:
+            request = urllib.request.Request(
+                f"https://api.github.com/repos/{RELEASE_REPOSITORY}/releases?per_page=20",
+                headers={"Accept": "application/vnd.github+json", "User-Agent": "momo-song-installer"},
+            )
+            with urllib.request.urlopen(request) as response:
+                releases = json.load(response)
+            published = [item for item in releases if not item.get("draft")]
+            if not published:
+                raise RuntimeError(f"No published release found for {RELEASE_REPOSITORY}")
+            _resolved_release_tag = published[0]["tag_name"]
+        tag = _resolved_release_tag
+    return f"{RELEASE_BASE}/download/{tag}/{asset}"
 
 
 def download(url: str, destination: Path) -> str:
