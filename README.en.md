@@ -41,6 +41,7 @@ Use `--backend cpu` (`-Backend cpu` in PowerShell) for CPU installation. The ins
 - Official `llama-cpp-python` 0.3.34 wheels are wrapped in release ZIP archives.
 - Source-build fallback is disabled when a compatible wheel is unavailable.
 - Linux acestep.cpp archives are built from a pinned upstream source revision during release creation.
+- The Linux CUDA archive is packaged from a tested build and uploaded to the release separately.
 - Windows binaries are repackaged from the prebuilt distribution listed by upstream.
 - Use `--acestep skip` or `-AceStep skip` if acestep.cpp is managed separately.
 - Downloads are checked against SHA-256 files attached to the same release.

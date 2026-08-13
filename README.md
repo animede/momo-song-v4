@@ -45,6 +45,7 @@ CPU版は `--backend cpu`（PowerShellでは `-Backend cpu`）を指定します
 - `llama-cpp-python` 0.3.34は公式ホイールをRelease用ZIPへ再梱包したものを取得します。
 - `--only-binary=:all:`を使用し、対応ホイールがない場合の暗黙のソースビルドを禁止します。
 - Linux版acestep.cppは固定した上流ソースリビジョンからRelease作成時にビルドします。
+- Linux CUDA版は動作確認済みビルドを専用スクリプトでパッケージ化してReleaseへ添付します。
 - Windows版acestep.cppは上流README掲載のビルド済み配布をRelease用ZIPへ再梱包します。
 - ACE-Stepを別途用意する場合は `--acestep skip` / `-AceStep skip` を指定できます。
 - インストーラはRelease添付のSHA-256と照合し、取得元を `vendor/.sources/` に記録します。

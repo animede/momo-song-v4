@@ -75,28 +75,6 @@ jobs:
             acestep.cpp-linux-x86_64-cpu.tar.gz
             acestep.cpp-linux-x86_64-cpu.tar.gz.sha256
 
-  acestep-linux-cuda:
-    runs-on: [self-hosted, Linux, X64, cuda]
-    steps:
-      - name: Build fixed upstream revision
-        run: |
-          rm -rf source package
-          git clone --recurse-submodules https://github.com/ServeurpersoCom/acestep.cpp.git source
-          git -C source checkout "$ACESTEP_REVISION"
-          git -C source submodule update --init --recursive
-          cmake -S source -B source/build -DCMAKE_BUILD_TYPE=Release -DGGML_CUDA=ON
-          cmake --build source/build --config Release -j "$(nproc)"
-          mkdir -p package/build
-          find source/build -maxdepth 1 -type f \( -executable -o -name '*.so*' \) -exec cp -a {} package/build/ \;
-          cp source/LICENSE package/LICENSE.acestep.cpp
-          printf 'Source: https://github.com/ServeurpersoCom/acestep.cpp\nRevision: %s\n' "$ACESTEP_REVISION" > package/SOURCE.txt
-          tar -C package -czf acestep.cpp-linux-x86_64-cuda.tar.gz .
-          sha256sum acestep.cpp-linux-x86_64-cuda.tar.gz > acestep.cpp-linux-x86_64-cuda.tar.gz.sha256
-      - uses: actions/upload-artifact@v4
-        with:
-          name: acestep-linux-cuda
-          path: acestep.cpp-linux-x86_64-cuda.tar.gz*
-
   acestep-windows:
     runs-on: ubuntu-latest
     steps:
@@ -113,7 +91,7 @@ jobs:
           path: acestep.cpp-windows-x86_64-cuda.zip*
 
   publish:
-    needs: [llama-wheels, acestep-linux-cpu, acestep-linux-cuda, acestep-windows]
+    needs: [llama-wheels, acestep-linux-cpu, acestep-windows]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
