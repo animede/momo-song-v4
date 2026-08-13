@@ -65,7 +65,9 @@ jobs:
           cmake -S source -B source/build-cpu -DCMAKE_BUILD_TYPE=Release -DGGML_CUDA=OFF -DGGML_NATIVE=OFF
           cmake --build source/build-cpu --config Release -j "$(nproc)"
           mkdir -p package/build-cpu
-          find source/build-cpu -maxdepth 1 -type f \( -executable -o -name '*.so*' \) -exec cp -a {} package/build-cpu/ \;
+          find source/build-cpu -maxdepth 1 \( -type f -o -type l \) \
+            \( -executable -o -name '*.so' -o -name '*.so.*' \) \
+            -exec cp -a {} package/build-cpu/ \;
           cp source/LICENSE package/LICENSE.acestep.cpp
           printf 'Source: https://github.com/ServeurpersoCom/acestep.cpp\nRevision: %s\n' "$ACESTEP_REVISION" > package/SOURCE.txt
           tar -C package -czf acestep.cpp-linux-x86_64-cpu.tar.gz .
