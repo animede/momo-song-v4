@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import html.parser
+import tempfile
 import urllib.parse
 import urllib.request
 import zipfile
@@ -45,16 +46,19 @@ def main() -> None:
         raise SystemExit(f"Expected one matching wheel, found {len(candidates)} at {index}")
     wheel_url = candidates[0]
     wheel_name = urllib.parse.urlparse(wheel_url).path.rsplit("/", 1)[-1]
-    wheel = args.output.parent / wheel_name
-    urllib.request.urlretrieve(wheel_url, wheel)
     license_url = "https://raw.githubusercontent.com/abetlen/llama-cpp-python/main/LICENSE.md"
-    license_file = args.output.parent / "LICENSE.llama-cpp-python"
-    urllib.request.urlretrieve(license_url, license_file)
-    source = args.output.parent / "SOURCE.txt"
-    source.write_text(f"Wheel: {wheel_url}\nLicense: {license_url}\n", encoding="utf-8")
-    with zipfile.ZipFile(args.output, "w", zipfile.ZIP_DEFLATED) as bundle:
-        for path in (wheel, license_file, source):
-            bundle.write(path, path.name)
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory() as temporary:
+        staging = Path(temporary)
+        wheel = staging / wheel_name
+        license_file = staging / "LICENSE.llama-cpp-python"
+        source = staging / "SOURCE.txt"
+        urllib.request.urlretrieve(wheel_url, wheel)
+        urllib.request.urlretrieve(license_url, license_file)
+        source.write_text(f"Wheel: {wheel_url}\nLicense: {license_url}\n", encoding="utf-8")
+        with zipfile.ZipFile(args.output, "w", zipfile.ZIP_DEFLATED) as bundle:
+            for path in (wheel, license_file, source):
+                bundle.write(path, path.name)
 
 
 if __name__ == "__main__":
