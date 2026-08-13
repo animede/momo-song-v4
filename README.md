@@ -1,5 +1,7 @@
 # Momo Song v4
 
+[English](README.en.md) | 日本語
+
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
 歌詞生成、ACE-Step 1.5による作曲、背景と音響連動演出を統合したWebアプリケーションです。

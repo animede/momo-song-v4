@@ -70,6 +70,9 @@ h1, h2, h3 {
   border: 1px solid rgba(255, 255, 255, 0.65);
   border-radius: 5px;
 }
+#ui_language {
+  max-width: 6.5rem;
+}
 .startup-hero {
   width: 100%;
   aspect-ratio: 16 / 9;

@@ -2,7 +2,7 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
-    <title>音楽生成</title>
+    <title>Momo Song - AI Music Generator</title>
     <!-- 外部CSSを読み込む -->
     <link rel="stylesheet" href="/static/style.css">
   </head>
@@ -14,6 +14,11 @@
         <div class="app-title">Momo Song</div>
         <div class="app-subtitle">AI Music Generator</div>
         <div class="header-image-selector">
+          <label for="ui_language">言語</label>
+          <select id="ui_language" aria-label="表示言語">
+            <option value="ja">日本語</option>
+            <option value="en">English</option>
+          </select>
           <label for="startup_image_select">背景</label>
           <div class="background-select-stack">
             <select id="startup_image_select" name="startup_image">
@@ -272,6 +277,74 @@
     </div>
 
     <script>
+      const translations = {
+        en: {
+          '言語': 'Language', '表示言語': 'Display language', '背景': 'Background', '演出': 'Visual',
+          '自動選択（曲に合わせる）': 'Auto (match song)', 'ランダム': 'Random',
+          'AI音楽スタジオ': 'AI Music Studio', 'ももちゃん': 'Momo', '夜の都会・遠景': 'Night city panorama',
+          '天の川の星空': 'Milky Way', '癒やしの草原と山': 'Healing meadow and mountains',
+          '近未来都市': 'Futuristic city', '歩道を歩く女性・遠景': 'Woman walking in the distance',
+          '故郷の街': 'Hometown', '日常のリビング': 'Everyday living room',
+          '昼の横断歩道を歩く女性': 'Woman crossing by day', '雨上がりの紫陽花': 'Hydrangeas after rain',
+          '一面のひまわり農場': 'Sunflower fields', '音量リング': 'Volume ring', 'ライブ波形': 'Live waveform',
+          '星のきらめき': 'Starlight', '帯域スペクトラム': 'Band spectrum', 'ネオンの呼吸': 'Neon breathing',
+          '放射スペクトラム': 'Radial spectrum', '低音オーブ': 'Bass orbs', '灯りのゆらぎ': 'Flickering light',
+          '周波数リボン': 'Frequency ribbons', '音響パーティクル': 'Audio particles',
+          'ステレオウェーブ': 'Stereo waves', '音楽の解説': 'About this song',
+          '音楽生成': 'Generate', '初期化': 'Reset', 'ループ生成': 'Loop generation', 'ループ生成 ON': 'Loop generation ON',
+          '保存': 'Save', '生成パラメータ': 'Generation parameters', 'タイトル（任意）': 'Title (optional)',
+          'ジャンル（任意）': 'Genre (optional)', 'ムード（任意）': 'Mood (optional)', '楽器（任意）': 'Instruments (optional)',
+          '推論ステップ': 'Inference steps', '音楽の長さ（秒）': 'Duration (sec)', '音楽設定': 'Music settings',
+          'ボーカルなしバージョン': 'Instrumental version', '表示パラメータ': 'Image settings',
+          '画像サイズ:': 'Image size:', '向き:': 'Orientation:', '横': 'Landscape', '縦': 'Portrait',
+          '音楽生成バックエンド': 'Music backend', 'Local acestep.cpp（画像生成なし）': 'Local acestep.cpp (no image generation)',
+          'モデル': 'Model', 'TURBO-Q4（標準／STRICT時6GB～）': 'TURBO-Q4 (standard / 6GB+ with STRICT)',
+          'TURBO-Q8（高品質／12GB～）': 'TURBO-Q8 (high quality / 12GB+)',
+          'XL TURBO（超高品質／16GB～）': 'XL TURBO (ultra quality / 16GB+)',
+          'ACE-Step VRAMモード': 'ACE-Step VRAM mode', 'モデル常駐（高速）': 'Keep loaded (fast)',
+          'STRICT（省VRAM）': 'STRICT (low VRAM)', 'ボーカル言語': 'Vocal language', '日本語': 'Japanese',
+          '英語': 'English', '中国語': 'Chinese', '韓国語': 'Korean', '自動判定': 'Auto detect',
+          'BPM（空欄で自動）': 'BPM (blank = auto)', 'キー（空欄で自動）': 'Key (blank = auto)',
+          'Seed（空欄でランダム）': 'Seed (blank = random)', '自動': 'Auto', 'Thinking（高品質）': 'Thinking (high quality)',
+          '生成した曲': 'Generated songs', '一括ダウンロード': 'Download all', 'まだ生成された曲はありません。': 'No songs generated yet.',
+          '無題': 'Untitled', 'ZIP作成中…': 'Creating ZIP…', '作曲終了…': 'Music generation complete…',
+          '作詞・曲データ作成中': 'Writing lyrics and song data…', '作詞完了・作曲開始': 'Lyrics ready — generating music',
+          '再生を停止しました': 'Playback stopped', 'ループ生成を停止し、手動モードに切り替えました': 'Loop generation stopped; switched to manual mode',
+          '音声データが見つかりません': 'Audio data was not found', '一括ダウンロードを作成できませんでした。': 'Could not create the download archive.',
+          '生成したい曲のイメージや指示を入力してください。たとえば、ジャンルやムード、楽器の指定などを含めると良いでしょう。指定がなければ、おまかせで生成します。': 'Describe the song you want. You can include a genre, mood, or instruments. Leave blank for a surprise.',
+          'タイトルを入力': 'Enter a title', '例：ポップ、ジャズ': 'e.g. pop, jazz',
+          '例：明るい、落ち着いた': 'e.g. bright, calm', '例：ギター、ピアノ': 'e.g. guitar, piano'
+        }
+      };
+      const japaneseText = new WeakMap();
+      const japaneseAttributes = new WeakMap();
+      function tr(value) {
+        return document.documentElement.lang === 'en' ? (translations.en[value] || value) : value;
+      }
+      function applyLanguage(language) {
+        const lang = language === 'en' ? 'en' : 'ja';
+        document.documentElement.lang = lang;
+        document.querySelectorAll('body *').forEach(element => {
+          element.childNodes.forEach(node => {
+            if (node.nodeType !== Node.TEXT_NODE || !node.textContent.trim()) return;
+            if (!japaneseText.has(node)) japaneseText.set(node, node.textContent);
+            const original = japaneseText.get(node);
+            const trimmed = original.trim();
+            node.textContent = original.replace(trimmed, lang === 'en' ? (translations.en[trimmed] || trimmed) : trimmed);
+          });
+          ['placeholder', 'aria-label'].forEach(attribute => {
+            if (!element.hasAttribute(attribute)) return;
+            let saved = japaneseAttributes.get(element) || {};
+            if (!(attribute in saved)) saved[attribute] = element.getAttribute(attribute);
+            japaneseAttributes.set(element, saved);
+            element.setAttribute(attribute, lang === 'en' ? (translations.en[saved[attribute]] || saved[attribute]) : saved[attribute]);
+          });
+        });
+        localStorage.setItem('momo-ui-language', lang);
+        if (typeof syncAutoGenerateButton === 'function') syncAutoGenerateButton();
+        if (typeof updateAudioDurationValue === 'function') updateAudioDurationValue(document.getElementById('audio_duration')?.value ?? -1);
+      }
+
       const spinner     = document.getElementById('loading-spinner');
       const generateBtn = document.getElementById('generate_btn');
       const backBtn = document.getElementById('back_btn');
@@ -279,6 +352,9 @@
       const audioPlayer = document.getElementById('audio_player');
       const inputControls = document.getElementById('input-controls');
       const statusEl = document.getElementById('status');
+      const uiLanguage = document.getElementById('ui_language');
+      uiLanguage.value = localStorage.getItem('momo-ui-language') || (navigator.language.toLowerCase().startsWith('ja') ? 'ja' : 'en');
+      uiLanguage.addEventListener('change', () => applyLanguage(uiLanguage.value));
       const BASE_HUE = 240; // 0=赤, 120=緑, 240=青 など
       let audioCtx, analyser, source, dataArray, waveformData;
       let stereoSplitter, leftAnalyser, rightAnalyser, leftWaveformData, rightWaveformData;
@@ -472,9 +548,9 @@
       function updateAudioDurationValue(value) {
         const display = document.getElementById('audio_duration_value');
         if (value == -1) {
-          display.textContent = '自動';
+          display.textContent = tr('自動');
         } else {
-          display.textContent = value + '秒';
+          display.textContent = value + (document.documentElement.lang === 'en' ? ' sec' : '秒');
         }
       }
 
@@ -508,7 +584,7 @@
       downloadAllSongsButton.addEventListener('click', async () => {
         if (!songHistory.length) return;
         downloadAllSongsButton.disabled = true;
-        downloadAllSongsButton.textContent = 'ZIP作成中…';
+        downloadAllSongsButton.textContent = tr('ZIP作成中…');
         try {
           const response = await fetch('/download_history_zip', {
             method: 'POST',
@@ -527,10 +603,10 @@
           setTimeout(() => URL.revokeObjectURL(zipUrl), 0);
         } catch (error) {
           console.error(error);
-          alert('一括ダウンロードを作成できませんでした。');
+          alert(tr('一括ダウンロードを作成できませんでした。'));
         } finally {
           downloadAllSongsButton.disabled = !songHistory.length;
-          downloadAllSongsButton.textContent = '一括ダウンロード';
+          downloadAllSongsButton.textContent = tr('一括ダウンロード');
         }
       });
 
@@ -555,7 +631,7 @@
         info.className = 'song-history-info';
         const title = document.createElement('span');
         title.className = 'song-history-title';
-        title.textContent = entry.titleText || '無題';
+        title.textContent = entry.titleText || tr('無題');
         const meta = document.createElement('span');
         meta.className = 'song-history-meta';
         meta.textContent = formatDuration(duration);
@@ -567,7 +643,7 @@
         play.type = 'button';
         play.className = 'history-icon-button history-play-button';
         play.title = '再生';
-        play.setAttribute('aria-label', `${title.textContent}を再生`);
+        play.setAttribute('aria-label', document.documentElement.lang === 'en' ? `Play ${title.textContent}` : `${title.textContent}を再生`);
         play.textContent = '▶';
         play.addEventListener('click', () => {
           // 履歴再生は手動操作として、現在曲と自動生成キューを即座に置き換える。
@@ -583,7 +659,7 @@
         download.type = 'button';
         download.className = 'history-icon-button';
         download.title = 'ダウンロード';
-        download.setAttribute('aria-label', `${title.textContent}をダウンロード`);
+        download.setAttribute('aria-label', document.documentElement.lang === 'en' ? `Download ${title.textContent}` : `${title.textContent}をダウンロード`);
         download.textContent = '⬇';
         download.addEventListener('click', () => {
           downloadDataUrl(entry.audio_base64, `${entry.titleText || 'music'}.mp3`);
@@ -595,7 +671,7 @@
         remove.type = 'button';
         remove.className = 'history-icon-button history-delete-button';
         remove.title = '削除';
-        remove.setAttribute('aria-label', `${title.textContent}を履歴から削除`);
+        remove.setAttribute('aria-label', document.documentElement.lang === 'en' ? `Remove ${title.textContent} from history` : `${title.textContent}を履歴から削除`);
         remove.textContent = '✕';
         remove.addEventListener('click', () => {
           const index = songHistory.findIndex(song =>
@@ -673,7 +749,7 @@ function getImageSizeParams() {
         }, { once: true });
         audioPlayer.style.display = 'block';
         resultDiv.style.display = 'grid';
-        updateStatus('作曲終了…');
+        updateStatus(tr('作曲終了…'));
         setTimeout(processPlayQueue, 500);
         // ★ここを追加　再生の確実性が上がります
         try {
@@ -736,7 +812,7 @@ function getImageSizeParams() {
         const enabled = autoGenerateChk.checked;
         autoGenerateBtn.classList.toggle('is-active', enabled);
         autoGenerateBtn.setAttribute('aria-pressed', String(enabled));
-        autoGenerateBtn.textContent = enabled ? 'ループ生成 ON' : 'ループ生成';
+        autoGenerateBtn.textContent = tr(enabled ? 'ループ生成 ON' : 'ループ生成');
       }
 
       autoGenerateBtn.addEventListener('click', (event) => {
@@ -829,9 +905,9 @@ function getImageSizeParams() {
           audioPlayer.style.display = 'none';
           isGenerating = false;
           spinner.style.display = 'none';
-          updateStatus('ループ生成を停止し、手動モードに切り替えました');
+          updateStatus(tr('ループ生成を停止し、手動モードに切り替えました'));
         } else {
-          updateStatus('再生を停止しました');
+          updateStatus(tr('再生を停止しました'));
         }
       }
       document.getElementById('media-container').addEventListener(
@@ -915,7 +991,7 @@ function getImageSizeParams() {
             // 生成中スピナーを表示
             spinner.style.display = 'block';
             statusEl.style.display = 'block';
-            updateStatus('作詞・曲データ作成中');
+            updateStatus(tr('作詞・曲データ作成中'));
           }
 
           // Allow the browser to render the spinner before proceeding
@@ -1083,7 +1159,7 @@ function getImageSizeParams() {
           chosenAutoAnimation = automaticAnimation(
             `${fullPrompt}\n${generatedMusicMessage}\n${JSON.stringify(lyrics_dict_js)}`
           );
-          updateStatus('作詞完了・作曲開始');
+          updateStatus(tr('作詞完了・作曲開始'));
 
           const formData = new FormData();
           formData.append('lyrics_dict', lyrics_dict);
@@ -1561,9 +1637,10 @@ function getImageSizeParams() {
           aAudio.click();
           URL.revokeObjectURL(aAudio.href);
         } else {
-          alert('音声データが見つかりません');
+          alert(tr('音声データが見つかりません'));
         }
       });
+      applyLanguage(uiLanguage.value);
     </script>
 
   </body>
