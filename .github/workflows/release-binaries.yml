@@ -1,0 +1,127 @@
+name: Build release binaries
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to upload assets to
+        required: true
+        default: v0.1.0
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+env:
+  LLAMA_VERSION: "0.3.34"
+  ACESTEP_REVISION: "9761469d95fc204b5468623c68a1a2203e50b1f9"
+
+jobs:
+  llama-wheels:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {accelerator: cpu, system: linux}
+          - {accelerator: cpu, system: windows}
+          - {accelerator: cu121, system: linux}
+          - {accelerator: cu122, system: linux}
+          - {accelerator: cu123, system: linux}
+          - {accelerator: cu124, system: linux}
+          - {accelerator: cu124, system: windows}
+          - {accelerator: cu125, system: linux}
+          - {accelerator: cu125, system: windows}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Package official upstream wheel
+        run: |
+          mkdir -p dist
+          python scripts/package_llama_wheel.py \
+            --version "$LLAMA_VERSION" \
+            --accelerator "${{ matrix.accelerator }}" \
+            --system "${{ matrix.system }}" \
+            --output "dist/llama-cpp-python-${LLAMA_VERSION}-${{ matrix.accelerator }}-${{ matrix.system }}-x86_64.zip"
+          (cd dist && for file in *.zip; do sha256sum "$file" > "$file.sha256"; done)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: llama-${{ matrix.accelerator }}-${{ matrix.system }}
+          path: dist/*
+
+  acestep-linux-cpu:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Build fixed upstream revision
+        run: |
+          git clone --recurse-submodules https://github.com/ServeurpersoCom/acestep.cpp.git source
+          git -C source checkout "$ACESTEP_REVISION"
+          git -C source submodule update --init --recursive
+          cmake -S source -B source/build-cpu -DCMAKE_BUILD_TYPE=Release -DGGML_CUDA=OFF -DGGML_NATIVE=OFF
+          cmake --build source/build-cpu --config Release -j "$(nproc)"
+          mkdir -p package/build-cpu
+          find source/build-cpu -maxdepth 1 -type f \( -executable -o -name '*.so*' \) -exec cp -a {} package/build-cpu/ \;
+          cp source/LICENSE package/LICENSE.acestep.cpp
+          printf 'Source: https://github.com/ServeurpersoCom/acestep.cpp\nRevision: %s\n' "$ACESTEP_REVISION" > package/SOURCE.txt
+          tar -C package -czf acestep.cpp-linux-x86_64-cpu.tar.gz .
+          sha256sum acestep.cpp-linux-x86_64-cpu.tar.gz > acestep.cpp-linux-x86_64-cpu.tar.gz.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: acestep-linux-cpu
+          path: |
+            acestep.cpp-linux-x86_64-cpu.tar.gz
+            acestep.cpp-linux-x86_64-cpu.tar.gz.sha256
+
+  acestep-linux-cuda:
+    runs-on: [self-hosted, Linux, X64, cuda]
+    steps:
+      - name: Build fixed upstream revision
+        run: |
+          rm -rf source package
+          git clone --recurse-submodules https://github.com/ServeurpersoCom/acestep.cpp.git source
+          git -C source checkout "$ACESTEP_REVISION"
+          git -C source submodule update --init --recursive
+          cmake -S source -B source/build -DCMAKE_BUILD_TYPE=Release -DGGML_CUDA=ON
+          cmake --build source/build --config Release -j "$(nproc)"
+          mkdir -p package/build
+          find source/build -maxdepth 1 -type f \( -executable -o -name '*.so*' \) -exec cp -a {} package/build/ \;
+          cp source/LICENSE package/LICENSE.acestep.cpp
+          printf 'Source: https://github.com/ServeurpersoCom/acestep.cpp\nRevision: %s\n' "$ACESTEP_REVISION" > package/SOURCE.txt
+          tar -C package -czf acestep.cpp-linux-x86_64-cuda.tar.gz .
+          sha256sum acestep.cpp-linux-x86_64-cuda.tar.gz > acestep.cpp-linux-x86_64-cuda.tar.gz.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: acestep-linux-cuda
+          path: acestep.cpp-linux-x86_64-cuda.tar.gz*
+
+  acestep-windows:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
+          python scripts/package_acestep_windows.py
+          sha256sum acestep.cpp-windows-x86_64-cuda.zip > acestep.cpp-windows-x86_64-cuda.zip.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: acestep-windows
+          path: acestep.cpp-windows-x86_64-cuda.zip*
+
+  publish:
+    needs: [llama-wheels, acestep-linux-cpu, acestep-linux-cuda, acestep-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Upload assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: gh release upload "$RELEASE_TAG" dist/* --repo "$GITHUB_REPOSITORY" --clobber

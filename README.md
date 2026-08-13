@@ -24,8 +24,8 @@ Local acestep.cppでは画像生成を行わず、選択した背景を維持し
 
 ## セットアップ
 
-Python 3.10〜3.12を使用します。インストーラは依存物をこのリポジトリから再配布せず、
-それぞれの上流配布元から直接取得します。
+Python 3.10〜3.12を使用します。インストーラはMomo Song v4のGitHub Releasesから
+検証済みビルド済みパッケージを取得します。
 
 Linux CUDA（例: CUDA 12.5）:
 
@@ -42,12 +42,13 @@ Windows PowerShell:
 CPU版は `--backend cpu`（PowerShellでは `-Backend cpu`）を指定します。
 
 - Python仮想環境は `.venv` に作成されます。
-- `llama-cpp-python` 0.3.34はabetlen公式ホイールインデックスから取得します。
+- `llama-cpp-python` 0.3.34は公式ホイールをRelease用ZIPへ再梱包したものを取得します。
 - `--only-binary=:all:`を使用し、対応ホイールがない場合の暗黙のソースビルドを禁止します。
-- Windows版acestep.cppは上流README掲載のビルド済み配布元から直接取得します。
-- 上流にLinux版ビルド済みacestep.cppがないため、Linuxでは公式GitHubソースからビルドします。
+- Linux版acestep.cppは固定した上流ソースリビジョンからRelease作成時にビルドします。
+- Windows版acestep.cppは上流README掲載のビルド済み配布をRelease用ZIPへ再梱包します。
 - ACE-Stepを別途用意する場合は `--acestep skip` / `-AceStep skip` を指定できます。
-- 取得元、バージョン、ダウンロード物のSHA-256は `vendor/.sources/` に記録されます。
+- インストーラはRelease添付のSHA-256と照合し、取得元を `vendor/.sources/` に記録します。
+- 公式ホイールの対応範囲はLinuxがCPU/CUDA 12.1〜12.5、WindowsがCPU/CUDA 12.4〜12.5です。
 - モデルウェイトは同梱・自動取得されません。
 
 > Windows用依存物の取得には対応していますが、現行のACEサーバー自動再起動処理はLinuxの
@@ -126,4 +127,5 @@ Remote利用時だけ、次のサービスを環境変数で指定します。
 ## ライセンス
 
 Momo Song v4は[Apache License 2.0](LICENSE)で提供されます。外部ライブラリ、ビルド済み
-バイナリ、モデルウェイトには、それぞれの上流ライセンスが適用されます。
+バイナリ、モデルウェイトには、それぞれの上流ライセンスが適用されます。再配布物の情報は
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)を参照してください。

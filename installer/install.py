@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Install Momo Song dependencies from their original upstream distributors."""
+"""Install Momo Song dependencies from Momo Song GitHub Releases."""
 
 from __future__ import annotations
 
@@ -12,6 +12,7 @@ import subprocess
 import sys
 import urllib.request
 import venv
+import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -20,7 +21,9 @@ ROOT = Path(__file__).resolve().parents[1]
 VENV_DIR = ROOT / ".venv"
 ACESTEP_DIR = ROOT / "vendor" / "acestep.cpp"
 LLAMA_VERSION = "0.3.34"
-LLAMA_INDEX_BASE = "https://abetlen.github.io/llama-cpp-python/whl"
+RELEASE_REPOSITORY = os.getenv("MOMO_RELEASE_REPOSITORY", "animede/momo-song-v4")
+RELEASE_TAG = os.getenv("MOMO_RELEASE_TAG", "latest")
+RELEASE_BASE = f"https://github.com/{RELEASE_REPOSITORY}/releases"
 ACESTEP_REPOSITORY = "https://github.com/ServeurpersoCom/acestep.cpp.git"
 ACESTEP_WINDOWS_BASE = "https://www.serveurperso.com/temp/acestep.cpp-win64"
 ACESTEP_WINDOWS_FILES = (
@@ -62,12 +65,30 @@ def install_python(backend: str, cuda: str) -> None:
     python = str(venv_python())
     run([python, "-m", "pip", "install", "--upgrade", "pip"])
     run([python, "-m", "pip", "install", "--only-binary=:all:", "-r", str(ROOT / "requirements.txt")])
-    wheel_index = f"{LLAMA_INDEX_BASE}/{'cpu' if backend == 'cpu' else cuda}"
-    run([
-        python, "-m", "pip", "install", "--only-binary=:all:",
-        f"llama-cpp-python=={LLAMA_VERSION}", "--extra-index-url", wheel_index,
-    ])
-    record_source("llama-cpp-python", {"version": LLAMA_VERSION, "index": wheel_index})
+    accelerator = "cpu" if backend == "cpu" else cuda
+    system = "windows" if os.name == "nt" else "linux"
+    if system == "windows" and accelerator not in {"cpu", "cu124", "cu125"}:
+        raise SystemExit("Windows用公式ホイールはCPU、CUDA 12.4、CUDA 12.5に対応しています。")
+    asset = f"llama-cpp-python-{LLAMA_VERSION}-{accelerator}-{system}-x86_64.zip"
+    archive = ROOT / "vendor" / ".downloads" / asset
+    source_url, digest = download_release_asset(asset, archive)
+    wheel_dir = archive.parent / asset.removesuffix(".zip")
+    wheel_dir.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(archive) as bundle:
+        wheels = [name for name in bundle.namelist() if name.endswith(".whl")]
+        if len(wheels) != 1:
+            raise RuntimeError(f"Expected one wheel in {asset}, found {len(wheels)}")
+        bundle.extract(wheels[0], wheel_dir)
+    run([python, "-m", "pip", "install", "--only-binary=:all:", str(wheel_dir / wheels[0])])
+    record_source("llama-cpp-python", {
+        "version": LLAMA_VERSION, "release_asset": source_url, "sha256": digest,
+    })
+
+
+def release_asset_url(asset: str) -> str:
+    if RELEASE_TAG == "latest":
+        return f"{RELEASE_BASE}/latest/download/{asset}"
+    return f"{RELEASE_BASE}/download/{RELEASE_TAG}/{asset}"
 
 
 def download(url: str, destination: Path) -> str:
@@ -81,6 +102,17 @@ def download(url: str, destination: Path) -> str:
             digest.update(chunk)
     temporary.replace(destination)
     return digest.hexdigest()
+
+
+def download_release_asset(asset: str, destination: Path) -> tuple[str, str]:
+    url = release_asset_url(asset)
+    digest = download(url, destination)
+    with urllib.request.urlopen(release_asset_url(f"{asset}.sha256")) as response:
+        expected = response.read().decode().split()[0].lower()
+    if digest.lower() != expected:
+        destination.unlink(missing_ok=True)
+        raise RuntimeError(f"SHA-256 mismatch for {asset}")
+    return url, digest
 
 
 def record_source(name: str, details: dict[str, object]) -> None:
@@ -97,17 +129,27 @@ def record_source(name: str, details: dict[str, object]) -> None:
 
 
 def install_acestep_windows() -> None:
-    release_dir = ACESTEP_DIR / "build" / "Release"
-    hashes: dict[str, str] = {}
-    for filename in ACESTEP_WINDOWS_FILES:
-        url = f"{ACESTEP_WINDOWS_BASE}/build/Release/{filename}"
-        hashes[filename] = download(url, release_dir / filename)
-    server_url = f"{ACESTEP_WINDOWS_BASE}/server.cmd"
-    hashes["server.cmd"] = download(server_url, ACESTEP_DIR / "server.cmd")
+    asset = "acestep.cpp-windows-x86_64-cuda.zip"
+    archive = ROOT / "vendor" / ".downloads" / asset
+    source_url, digest = download_release_asset(asset, archive)
+    ACESTEP_DIR.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(archive) as bundle:
+        bundle.extractall(ACESTEP_DIR)
     record_source("acestep.cpp", {
-        "distribution": "upstream Windows prebuilt directory",
-        "base_url": ACESTEP_WINDOWS_BASE,
-        "sha256": hashes,
+        "distribution": "Momo Song GitHub Release",
+        "release_asset": source_url, "sha256": digest,
+    })
+
+
+def install_acestep_linux(backend: str) -> None:
+    asset = f"acestep.cpp-linux-x86_64-{backend}.tar.gz"
+    archive = ROOT / "vendor" / ".downloads" / asset
+    source_url, digest = download_release_asset(asset, archive)
+    ACESTEP_DIR.mkdir(parents=True, exist_ok=True)
+    run(["tar", "-xzf", str(archive), "-C", str(ACESTEP_DIR)])
+    record_source("acestep.cpp", {
+        "distribution": "Momo Song GitHub Release",
+        "release_asset": source_url, "sha256": digest,
     })
 
 
@@ -144,11 +186,16 @@ def main() -> None:
     install_python(args.backend, args.cuda)
     mode = args.acestep
     if mode == "auto":
-        mode = "prebuilt" if platform.system() == "Windows" else "source"
+        mode = "prebuilt"
     if mode == "prebuilt":
-        if platform.system() != "Windows":
-            raise SystemExit("上流のビルド済みacestep.cppは現在Windows版のみです。Linuxでは --acestep source を指定してください。")
-        install_acestep_windows()
+        if platform.machine().lower() not in {"x86_64", "amd64"}:
+            raise SystemExit("ビルド済み配布はx86-64専用です。--acestep sourceを指定してください。")
+        if platform.system() == "Windows":
+            install_acestep_windows()
+        elif platform.system() == "Linux":
+            install_acestep_linux(args.backend)
+        else:
+            raise SystemExit("ビルド済みacestep.cppはLinux/Windows x86-64用です。")
     elif mode == "source":
         install_acestep_source(args.backend)
     print("\nInstallation complete. Model weights are not bundled; see README.md for model paths.")

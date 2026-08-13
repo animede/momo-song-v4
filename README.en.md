@@ -22,8 +22,8 @@ configured image-generation API.
 
 ## Install
 
-Python 3.10–3.12 is required. Dependencies are downloaded directly from their original upstream
-distributors and are not re-hosted by this repository.
+Python 3.10–3.12 is required. The installer downloads verified prebuilt packages from Momo Song v4
+GitHub Releases.
 
 ```bash
 # Linux, CUDA 12.5
@@ -38,11 +38,13 @@ distributors and are not re-hosted by this repository.
 Use `--backend cpu` (`-Backend cpu` in PowerShell) for CPU installation. The installer creates
 `.venv`. Model weights are not bundled or downloaded automatically.
 
-- `llama-cpp-python` 0.3.34 comes from abetlen's official wheel index.
+- Official `llama-cpp-python` 0.3.34 wheels are wrapped in release ZIP archives.
 - Source-build fallback is disabled when a compatible wheel is unavailable.
-- Windows acestep.cpp binaries come directly from the prebuilt location listed upstream.
-- Since upstream does not publish Linux binaries, Linux builds the official source locally.
+- Linux acestep.cpp archives are built from a pinned upstream source revision during release creation.
+- Windows binaries are repackaged from the prebuilt distribution listed by upstream.
 - Use `--acestep skip` or `-AceStep skip` if acestep.cpp is managed separately.
+- Downloads are checked against SHA-256 files attached to the same release.
+- Official wheel coverage is CPU/CUDA 12.1–12.5 on Linux and CPU/CUDA 12.4–12.5 on Windows.
 
 > Dependency download works on Windows, but automatic local ACE server lifecycle management still
 > relies on Linux tools (`ss`, `/proc`, and shell scripts). Fully automatic Local mode on Windows is
@@ -77,4 +79,5 @@ Remote services are configured with `LLM_API_URL`, `ACE_STEP_API_URL`, and `IMAG
 ## License
 
 Momo Song v4 is licensed under the [Apache License 2.0](LICENSE). Third-party libraries, binaries,
-and model weights remain under their respective upstream licenses.
+and model weights remain under their respective upstream licenses. See
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for redistributed components.

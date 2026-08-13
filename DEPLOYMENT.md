@@ -7,8 +7,8 @@
 - ローカルCUDA利用時はNVIDIA GPUと対応ドライバー
 - モデルを格納できるディスク容量
 
-初期インストーラは依存物を上流から直接取得します。モデルウェイトと外部サービスは
-それぞれのライセンス・利用条件を確認してください。
+初期インストーラはビルド済み依存物をMomo Song v4 GitHub Releasesから取得し、同じReleaseの
+SHA-256ファイルで検証します。モデルウェイトと外部サービスはそれぞれの利用条件を確認してください。
 
 ## インストール
 
@@ -25,9 +25,8 @@
 .\install.ps1 -Backend cuda -Cuda cu125
 ```
 
-Linuxでは上流にビルド済みacestep.cppがないため、既定で公式ソースをcloneしてビルドします。
-Windowsでは上流README掲載のビルド済み配布元から直接取得します。ACE-Stepを別途用意する
-場合は `--acestep skip`、PowerShellでは `-AceStep skip` を指定します。
+Linux/Windowsとも既定でGitHub Releaseのビルド済みacestep.cppを取得します。ソースから
+構築する場合は `--acestep source`、別途用意する場合は `--acestep skip`を指定します。
 
 ## 環境変数
 

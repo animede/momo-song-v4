@@ -8,6 +8,7 @@ Before pushing a public release branch:
 - Review `git diff --check` and `git status --short`.
 - Choose and add a project `LICENSE` before describing the repository as open source.
 - Include the ACE-Step, Gemma and all other third-party license notices in release artifacts.
+- Verify every release binary has a matching `.sha256` asset and embedded source/license metadata.
 - Keep model weights outside Git. Download them from their authorized upstream sources.
 - Review Git history before publishing. Rewriting history changes commit IDs and must be done deliberately.
 - Do not publish a release package until it has been tested from a clean Windows or Linux account.
