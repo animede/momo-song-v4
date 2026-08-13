@@ -3,7 +3,7 @@
 Before pushing a public release branch:
 
 - Run `python scripts/check_public_repo.py`.
-- Run the Python and frontend syntax checks documented in `README.md`.
+- Run Python compilation, shell syntax checks, and `git diff --check`.
 - Confirm `.env`, logs, virtual environments, models and generated audio are untracked.
 - Review `git diff --check` and `git status --short`.
 - Choose and add a project `LICENSE` before describing the repository as open source.
