@@ -57,10 +57,12 @@ done
 case "$backend" in
   cuda)
     server="$ACESTEP_CPP_DIR/build/ace-server"
+    server_dir="$ACESTEP_CPP_DIR/build"
     export CUDA_VISIBLE_DEVICES="$gpu"
     ;;
   cpu)
     server="$ACESTEP_CPP_DIR/build-cpu/ace-server"
+    server_dir="$ACESTEP_CPP_DIR/build-cpu"
     # CPU版でCUDA設定が誤って引き継がれないようにする。
     unset CUDA_VISIBLE_DEVICES || true
     ;;
@@ -69,6 +71,10 @@ case "$backend" in
     exit 2
     ;;
 esac
+
+# Release archives keep ggml shared libraries beside ace-server. Do not rely on
+# the absolute RPATH of the machine that built the package.
+export LD_LIBRARY_PATH="$server_dir${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 
 if [[ ! -x "$server" ]]; then
   echo "ace-server not found: $server" >&2
