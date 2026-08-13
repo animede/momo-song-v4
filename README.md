@@ -15,7 +15,33 @@
 
 ## セットアップ
 
-1. 必要なパッケージをインストールします。
+1. 自動インストーラを実行します。依存バイナリはこのリポジトリに複製せず、
+   それぞれの上流配布元から直接取得します。
+
+Linux（CUDA 12.5）:
+
+```bash
+./install.sh --backend cuda --cuda cu125
+```
+
+Windows PowerShell（CUDA 12.5）:
+
+```powershell
+.\install.ps1 -Backend cuda -Cuda cu125
+```
+
+CPU版は `--backend cpu`（PowerShellでは `-Backend cpu`）を指定します。
+仮想環境は `.venv` に作成されます。
+
+- `llama-cpp-python` は abetlen 公式ホイールインデックスから取得します。
+- ソースビルドへの暗黙の切替を禁止しているため、対応ホイールがない環境では
+  エラーで停止します。
+- Windows版 `acestep.cpp` は上流README掲載のビルド済み配布元から直接取得します。
+- 上流にはLinux版ビルド済み配布がないため、Linuxでは公式GitHubソースを取得して
+  ローカルビルドします。`--acestep skip` で省略できます。
+- 取得元とSHA-256（ダウンロード物）は `vendor/.sources/` に記録されます。
+
+手動でインストールする場合:
 
 CPU版:
 
@@ -204,4 +230,4 @@ CPU版はCUDA版と別の `build-cpu` ディレクトリへ構築されるため
 
 ## ライセンス
 
-MIT License
+Apache License 2.0
