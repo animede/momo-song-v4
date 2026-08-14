@@ -130,59 +130,97 @@ def _compact_genre_tags(genre_tags):
     return compact
 
 
-async def _local_e4b_music_generation(user_input, genre_tags, previouse_title):
-    """Two-pass prompt designed specifically for Gemma 4 E4B."""
+def _parse_ace_lyrics(lyrics):
+    """ACE-Step lyrics textを、表示用の順序付き辞書へ変換する。"""
+    sections = {}
+    current = None
+    counts = {}
+    for raw_line in str(lyrics or "").splitlines():
+        line = raw_line.strip()
+        match = re.fullmatch(r"\[([^\]]+)\]", line)
+        if match:
+            base = match.group(1).strip()
+            counts[base] = counts.get(base, 0) + 1
+            current = base if counts[base] == 1 else f"{base} {counts[base]}"
+            sections[current] = ""
+        elif current and line:
+            sections[current] += ("\n" if sections[current] else "") + line
+    return sections
+
+
+def _ace_vocal_line_count(lyrics):
+    instrumental = {"intro", "outro", "instrumental", "inst"}
+    return sum(
+        len([line for line in text.splitlines() if line.strip()])
+        for name, text in _parse_ace_lyrics(lyrics).items()
+        if re.sub(r"\s+\d+$", "", name).lower() not in instrumental
+    )
+
+
+async def _local_e4b_music_generation(
+    user_input, genre_tags, previouse_title, vocal_language="ja",
+    thinking=True, audio_duration=-1, no_vocal=False,
+):
+    """Gemma 4 E4BからACE-Step 1.5の正式な歌詞・caption形式を作る。"""
+    language_names = {"ja": "日本語", "en": "英語", "zh": "中国語", "ko": "韓国語"}
+    language = language_names.get(vocal_language, "日本語")
+    duration = int(audio_duration) if int(audio_duration) > 0 else 120
+    target_lines = 10 if duration < 60 else 16 if duration < 90 else 24
+    caption_rule = (
+        "30～60語の自然な英語1文。ジャンル/時代、ムード、ボーカル特性を含め、楽器名の列挙は禁止"
+        if thinking else
+        "3～5文の詳細な英語プロダクション指示。ジャンル、ムード、ボーカル、展開、音響を自然な文章で記述"
+    )
     song_prompt = dedent(f"""
-        あなたは日本語の作詞家であり、ACE-Step用の音楽ディレクターです。
+        あなたは作詞家であり、ACE-Step 1.5用の音楽ディレクターです。
         ユーザーの依頼から一曲分のデータを作成し、JSONオブジェクトだけを返してください。
         Markdown、コードフェンス、前置き、説明文は禁止です。
 
         必須JSON構造:
         {{
-          "title": "日本語の曲名",
-          "lyrics": {{
-            "verse": ["一行目", "二行目", "三行目", "四行目"],
-            "chorus": ["一行目", "二行目", "三行目", "四行目"],
-            "bridge": ["一行目", "二行目", "三行目", "四行目"],
-            "outro": ["一行目", "二行目", "三行目", "四行目"]
-          }},
-          "genre": "ACE-Step向け英語タグをカンマ区切り",
+          "title": "曲名",
+          "lyrics": "[Intro]\\n\\n[Verse]\\n歌詞...\\n\\n[Chorus]\\n歌詞...\\n\\n[Outro]",
+          "caption": "ACE-Step 1.5向けの自然な英語説明",
           "theme": "日本語の主題",
           "atmosphere": "日本語の雰囲気"
         }}
 
         作詞規則:
-        - verseは情景と物語の導入、chorusは中心感情と印象的な言葉、bridgeは視点の変化、outroは余韻と結末にする。
-        - 各セクションは必ず4行、全体で必ず16行にする。
-        - 各行は情景または感情が伝わる自然な一文にし、短い単語や説明だけで終わらせない。
-        - 歌詞は日本語だけにする。genreだけは英語にする。
-        - ユーザーがタイトル、歌詞、ジャンル、楽器を指定した場合は優先する。指定歌詞の文言は変更せず、セクションへ分けるだけにする。
-        - おまかせの場合は、前回と異なる題材、語彙、曲調を選ぶ。
-        - インストゥルメンタル指定の場合、各行は括弧で囲んだ演奏・展開指示にして、歌唱する文章を書かない。
-        - genreにはジャンル、楽器、ムード、ボーカル特性を簡潔に含める。
-
-        使用可能なACE-Stepタグの参考:
-        {json.dumps(_compact_genre_tags(genre_tags), ensure_ascii=False)}
+        - 歌詞は{language}のみ。翻訳、ローマ字併記、説明文は禁止。
+        - 歌唱部は[Verse]、[Pre-Chorus]、[Chorus]、[Bridge]を使う。
+        - [Intro]、[Outro]、[Instrumental]、ソロ系タグの直下には歌詞を書かない。
+        - {duration}秒の曲として約{target_lines}行以上を目安に、複数のVerseと反復Chorusで一曲分の展開を作る。
+        - 指定された歌詞は文言を変えず、ACE-Stepのセクションへ配置する。
+        - captionは{caption_rule}。
+        - captionで角括弧タグや単なるカンマ区切りキーワード列を使わない。
+        - インストゥルメンタル指定時はlyricsを"[Instrumental]"だけにし、歌詞を書かない。
 
         前回のタイトル: {previouse_title or "なし"}
+        ボーカルなし: {"はい" if no_vocal else "いいえ"}
         ユーザーの依頼: {user_input}
     """).strip()
 
     song = await llm_json(song_prompt, "local_cpp")
-    song["lyrics"] = _normalize_lyrics_sections(song.get("lyrics"))
-    required = {"verse", "chorus", "bridge", "outro"}
-    if not required.issubset(song["lyrics"]) or _lyrics_line_count(song["lyrics"]) < 16:
+    ace_lyrics = str(song.get("lyrics", "")).strip()
+    valid = no_vocal or (
+        "[Verse" in ace_lyrics and "[Chorus" in ace_lyrics
+        and _ace_vocal_line_count(ace_lyrics) >= max(8, target_lines - 4)
+    )
+    if not valid:
         correction_prompt = dedent(f"""
-            次のJSONを修正し、JSONオブジェクトだけを返してください。
-            lyricsにはverse、chorus、bridge、outroを必ず含め、各値を4個の日本語歌詞からなる配列にしてください。
-            全体は必ず16行です。短い語句ではなく、情景や感情が伝わる自然な一文にしてください。
-            title、genre、theme、atmosphereは維持してください。Markdownは禁止です。
+            次のJSONのlyricsだけをACE-Step 1.5形式へ修正し、JSONだけを返してください。
+            [Verse]と[Chorus]を含め、{language}だけで{target_lines}行以上にしてください。
+            [Intro]と[Outro]の直下には歌詞を書かないでください。caption等は維持してください。
             JSON: {json.dumps(song, ensure_ascii=False)}
         """).strip()
         song = await llm_json(correction_prompt, "local_cpp")
-        song["lyrics"] = _normalize_lyrics_sections(song.get("lyrics"))
-    if not required.issubset(song["lyrics"]) or _lyrics_line_count(song["lyrics"]) < 16:
-        raise ValueError("Gemma 4 E4Bが16行の必須歌詞構造を返しませんでした")
+        ace_lyrics = str(song.get("lyrics", "")).strip()
+    if not no_vocal and ("[Verse" not in ace_lyrics or "[Chorus" not in ace_lyrics):
+        raise ValueError("Gemma 4 E4BがACE-Step 1.5の歌詞構造を返しませんでした")
+
+    song["ace_lyrics"] = "[Instrumental]" if no_vocal else ace_lyrics
+    song["lyrics"] = ({"Instrumental": ""} if no_vocal else _parse_ace_lyrics(ace_lyrics))
+    song["genre"] = str(song.get("caption") or song.get("genre") or "").strip()
 
     description_prompt = dedent(f"""
         次の曲について、音楽の解説を日本語で120文字から220文字にまとめてください。
@@ -194,10 +232,16 @@ async def _local_e4b_music_generation(user_input, genre_tags, previouse_title):
     return True, song, description, ""
 
 
-async def music_generation(user_input, genre_tags, previouse_title, music_backend="remote"):
+async def music_generation(
+    user_input, genre_tags, previouse_title, music_backend="remote",
+    vocal_language="ja", thinking=True, audio_duration=-1, no_vocal=False,
+):
     print("=====>>>>>user_input=",user_input)
     if music_backend == "local_cpp":
-        return await _local_e4b_music_generation(user_input, genre_tags, previouse_title)
+        return await _local_e4b_music_generation(
+            user_input, genre_tags, previouse_title, vocal_language,
+            thinking, audio_duration, no_vocal,
+        )
     request_song = dedent(f"""
         ユーザーの入力の意図を正確に判断して選択肢から選び、指定されたワードを返しなさい。選択肢->
         1) autoや、おまかせの場合の指定ワードは'generatSong',
@@ -388,7 +432,7 @@ def generate_song(
     print(f"======>>>>>no_vocal parameter={no_vocal}")
     lyrics_dic = jeson_song['lyrics']
     print("###### lyrics_dic >>>>",lyrics_dic)
-    lyrics = convert_lyrics_dict_to_text(lyrics_dic, no_vocal)
+    lyrics = jeson_song.get('ace_lyrics') or convert_lyrics_dict_to_text(lyrics_dic, no_vocal)
     print("###### lyrics_text >>>>",lyrics)
     genre = jeson_song['genre']
     print("###### genre >>>>",genre)

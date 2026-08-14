@@ -1024,6 +1024,9 @@ function getImageSizeParams() {
           formData0.append('previouse_title', title || lastGeneratedTitle);
           formData0.append('no_vocal', document.getElementById('no_vocal').checked);
           formData0.append('music_backend', document.getElementById('music_backend').value);
+          formData0.append('vocal_language', document.getElementById('vocal_language').value);
+          formData0.append('thinking', document.getElementById('thinking').checked);
+          formData0.append('audio_duration', document.getElementById('audio_duration').value);
           try {
             const response = await fetch('/generate_lyrics', {
               method: 'POST', body: formData0, signal: generationSignal
@@ -1098,7 +1101,8 @@ function getImageSizeParams() {
           const lyrics_Text = Object.values(lyrics_section).join('\n');
           const lyricsL_txt_lines = lyrics_Text.split('\n').map(line => line.trim()).filter(line => line);
           console.log("lyricsL_txt_lines=", lyricsL_txt_lines);
-          if (lyricsL_txt_lines[0].length === 1) {
+          if (!document.getElementById('no_vocal').checked &&
+              (!lyricsL_txt_lines.length || lyricsL_txt_lines[0].length === 1)) {
             consecutiveErrors++;
             console.error(`歌詞生成不良（連続${consecutiveErrors}回目）: 歌詞が短すぎます`);
 

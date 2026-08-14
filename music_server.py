@@ -189,6 +189,9 @@ async def generate(
     previouse_title: str = Form(""),
     no_vocal: bool = Form(False),
     music_backend: str = Form("local_cpp"),
+    vocal_language: str = Form("ja"),
+    thinking: bool = Form(True),
+    audio_duration: int = Form(-1),
 ):
     if user_input is None or user_input.strip() == "":
         user_input = "おまかせで音楽を生成してください"
@@ -203,7 +206,8 @@ async def generate(
             # 2曲目以降はACEの常駐モデルを先に解放してGemma用VRAMを確保する。
             await release_ace_for_local_llm()
         success, lyrics_dict, music_world, _ = await music_generation(
-            user_input, genre_tags, previouse_title, music_backend
+            user_input, genre_tags, previouse_title, music_backend,
+            vocal_language, thinking, audio_duration, no_vocal,
         )
     except Exception as error:
         print(f"作詞処理中の予期しないエラー: {error}")
