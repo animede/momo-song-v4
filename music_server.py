@@ -192,6 +192,7 @@ async def generate(
     vocal_language: str = Form("ja"),
     thinking: bool = Form(True),
     audio_duration: int = Form(-1),
+    lyrics_format: str = Form("ace15"),
 ):
     if user_input is None or user_input.strip() == "":
         user_input = "おまかせで音楽を生成してください"
@@ -207,7 +208,7 @@ async def generate(
             await release_ace_for_local_llm()
         success, lyrics_dict, music_world, _ = await music_generation(
             user_input, genre_tags, previouse_title, music_backend,
-            vocal_language, thinking, audio_duration, no_vocal,
+            vocal_language, thinking, audio_duration, no_vocal, lyrics_format,
         )
     except Exception as error:
         print(f"作詞処理中の予期しないエラー: {error}")

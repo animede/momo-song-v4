@@ -157,6 +157,66 @@ def _ace_vocal_line_count(lyrics):
     )
 
 
+async def _local_e4b_legacy_music_generation(user_input, genre_tags, previouse_title):
+    """従来の固定16行・セクション辞書方式を互換用に維持する。"""
+    song_prompt = dedent(f"""
+        あなたは日本語の作詞家であり、ACE-Step用の音楽ディレクターです。
+        ユーザーの依頼から一曲分のデータを作成し、JSONオブジェクトだけを返してください。
+        Markdown、コードフェンス、前置き、説明文は禁止です。
+
+        必須JSON構造:
+        {{
+          "title": "日本語の曲名",
+          "lyrics": {{
+            "verse": ["一行目", "二行目", "三行目", "四行目"],
+            "chorus": ["一行目", "二行目", "三行目", "四行目"],
+            "bridge": ["一行目", "二行目", "三行目", "四行目"],
+            "outro": ["一行目", "二行目", "三行目", "四行目"]
+          }},
+          "genre": "ACE-Step向け英語タグをカンマ区切り",
+          "theme": "日本語の主題",
+          "atmosphere": "日本語の雰囲気"
+        }}
+
+        作詞規則:
+        - verse、chorus、bridge、outroを各4行、全体で必ず16行にする。
+        - 各行は情景または感情が伝わる自然な一文にする。
+        - 歌詞は日本語だけ、genreだけ英語にする。
+        - ユーザー指定のタイトル、歌詞、ジャンル、楽器を優先する。
+        - おまかせの場合は前回と異なる題材、語彙、曲調を選ぶ。
+        - インストゥルメンタル指定時は各行を括弧で囲んだ演奏・展開指示にする。
+        - genreにはジャンル、楽器、ムード、ボーカル特性を簡潔に含める。
+
+        使用可能なACE-Stepタグの参考:
+        {json.dumps(_compact_genre_tags(genre_tags), ensure_ascii=False)}
+
+        前回のタイトル: {previouse_title or "なし"}
+        ユーザーの依頼: {user_input}
+    """).strip()
+    song = await llm_json(song_prompt, "local_cpp")
+    song["lyrics"] = _normalize_lyrics_sections(song.get("lyrics"))
+    required = {"verse", "chorus", "bridge", "outro"}
+    if not required.issubset(song["lyrics"]) or _lyrics_line_count(song["lyrics"]) < 16:
+        correction_prompt = dedent(f"""
+            次のJSONを修正し、JSONオブジェクトだけを返してください。
+            lyricsにはverse、chorus、bridge、outroを必ず含め、各値を4個の日本語歌詞からなる配列にしてください。
+            全体は必ず16行です。title、genre、theme、atmosphereは維持してください。
+            JSON: {json.dumps(song, ensure_ascii=False)}
+        """).strip()
+        song = await llm_json(correction_prompt, "local_cpp")
+        song["lyrics"] = _normalize_lyrics_sections(song.get("lyrics"))
+    if not required.issubset(song["lyrics"]) or _lyrics_line_count(song["lyrics"]) < 16:
+        raise ValueError("Gemma 4 E4Bが16行の必須歌詞構造を返しませんでした")
+    description_prompt = dedent(f"""
+        次の曲について、音楽の解説を日本語で120文字から220文字にまとめてください。
+        ジャンル、楽器、曲調、歌詞の意図に触れてください。
+        Markdown記号、見出し、JSONは使わないでください。
+        曲データ: {json.dumps(song, ensure_ascii=False)}
+    """).strip()
+    description = await llm(description_prompt, "local_cpp")
+    return True, song, description, ""
+
+
 async def _local_e4b_music_generation(
     user_input, genre_tags, previouse_title, vocal_language="ja",
     thinking=True, audio_duration=-1, no_vocal=False,
@@ -235,9 +295,14 @@ async def _local_e4b_music_generation(
 async def music_generation(
     user_input, genre_tags, previouse_title, music_backend="remote",
     vocal_language="ja", thinking=True, audio_duration=-1, no_vocal=False,
+    lyrics_format="ace15",
 ):
     print("=====>>>>>user_input=",user_input)
     if music_backend == "local_cpp":
+        if lyrics_format == "legacy":
+            return await _local_e4b_legacy_music_generation(
+                user_input, genre_tags, previouse_title
+            )
         return await _local_e4b_music_generation(
             user_input, genre_tags, previouse_title, vocal_language,
             thinking, audio_duration, no_vocal,

@@ -238,6 +238,13 @@
                       <option value="unknown">自動判定</option>
                     </select>
                   </div>
+                  <div class="form-item local-lyrics-format">
+                    <label for="lyrics_format">歌詞形式</label>
+                    <select id="lyrics_format" name="lyrics_format">
+                      <option value="ace15" selected>ACE-Step 1.5（推奨）</option>
+                      <option value="legacy">従来形式（固定16行）</option>
+                    </select>
+                  </div>
                 </div>
                 <div class="music-detail-row">
                   <div class="form-item">
@@ -303,6 +310,8 @@
           'XL TURBO（超高品質／16GB～）': 'XL TURBO (ultra quality / 16GB+)',
           'ACE-Step VRAMモード': 'ACE-Step VRAM mode', 'モデル常駐（高速）': 'Keep loaded (fast)',
           'STRICT（省VRAM）': 'STRICT (low VRAM)', 'ボーカル言語': 'Vocal language', '日本語': 'Japanese',
+          '歌詞形式': 'Lyrics format', 'ACE-Step 1.5（推奨）': 'ACE-Step 1.5 (recommended)',
+          '従来形式（固定16行）': 'Legacy format (fixed 16 lines)',
           '英語': 'English', '中国語': 'Chinese', '韓国語': 'Korean', '自動判定': 'Auto detect',
           'BPM（空欄で自動）': 'BPM (blank = auto)', 'キー（空欄で自動）': 'Key (blank = auto)',
           'Seed（空欄でランダム）': 'Seed (blank = random)', '自動': 'Auto', 'Thinking（高品質）': 'Thinking (high quality)',
@@ -499,6 +508,7 @@
         const steps = document.getElementById('infer_step');
         const guidance = document.getElementById('guidance_scale');
         document.querySelector('.display-params').style.display = isLocal ? 'none' : '';
+        document.querySelector('.local-lyrics-format').style.display = isLocal ? '' : 'none';
         if (isLocal) {
           steps.value = 8;
           guidance.value = 1;
@@ -1027,6 +1037,7 @@ function getImageSizeParams() {
           formData0.append('vocal_language', document.getElementById('vocal_language').value);
           formData0.append('thinking', document.getElementById('thinking').checked);
           formData0.append('audio_duration', document.getElementById('audio_duration').value);
+          formData0.append('lyrics_format', document.getElementById('lyrics_format').value);
           try {
             const response = await fetch('/generate_lyrics', {
               method: 'POST', body: formData0, signal: generationSignal
