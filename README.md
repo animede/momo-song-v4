@@ -127,6 +127,8 @@ Remote利用時だけ、次のサービスを環境変数で指定します。
 
 ## ライセンス
 
+本リポジトリのソースコードの著作権者: © 2026 YUZUKI (animede)。著作権表示と [NOTICE](NOTICE) の内容は、Apache-2.0 第4条に基づき再配布時も保持してください。
+
 Momo Song v4は[Apache License 2.0](LICENSE)で提供されます。外部ライブラリ、ビルド済み
 バイナリ、モデルウェイトには、それぞれの上流ライセンスが適用されます。再配布物の情報は
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)を参照してください。
